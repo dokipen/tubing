@@ -52,6 +52,7 @@ setup(
     extras_require={
         "build": [
             "nose",
+            "unittest2",
         ],
         "s3": [
             "boto3",
