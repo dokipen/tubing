@@ -21,9 +21,6 @@ packages = [
 ]
 
 
-requires = []
-
-
 date = datetime.now().strftime("b%Y%m%d_%H%M%S")
 revision = os.environ.get("REVISION", date)
 version = "{}{}".format(minor_version, date)
@@ -47,7 +44,7 @@ setup(
     package_data={"": ["LICENSE"], "tubing": ["VERSION"]},
     package_dir={"tubing": "tubing"},
     include_package_data=True,
-    install_requires=requires,
+    install_requires=[],
     license="MIT",
     zip_safe=False,
     classifiers=(
@@ -55,6 +52,12 @@ setup(
     extras_require={
         "build": [
             "nose",
+        ],
+        "s3": [
+            "boto3",
+        ],
+        "elasticsearch": [
+            "requests",
         ],
     },
 )
