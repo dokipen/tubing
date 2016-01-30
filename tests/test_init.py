@@ -1,5 +1,10 @@
-import unittest
 import tubing
+import sys
+
+if sys.version_info < (2, 7):
+    import unittest2 as unittest
+else:
+    import unittest
 
 class InitTestCase(unittest.TestCase):
     def test_version(self):
