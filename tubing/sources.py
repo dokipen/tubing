@@ -103,7 +103,7 @@ class JSONParserSource(object):
         logger.debug("Reading JSON object")
         response = []
         for line in self.source.read(amt):
-            logger.debug("Parsing {}".format(line))
+            logger.debug("Parsing %s"%(line))
             if line:
                 response.append(json.loads(line.strip()))
             else:

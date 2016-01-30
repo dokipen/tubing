@@ -23,7 +23,7 @@ packages = [
 
 date = datetime.now().strftime("b%Y%m%d_%H%M%S")
 revision = os.environ.get("REVISION", date)
-version = "{}{}".format(minor_version, date)
+version = minor_version + date
 with open("tubing/VERSION", "w", "utf-8") as f:
     f.write(version)
 
