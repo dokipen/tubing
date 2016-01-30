@@ -1,10 +1,8 @@
 import tubing
 import sys
+# For python 2.6 backports
+import unittest2 as unittest
 
-if sys.version_info < (2, 7):
-    import unittest2 as unittest
-else:
-    import unittest
 
 class InitTestCase(unittest.TestCase):
     def test_version(self):
