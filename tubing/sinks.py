@@ -42,8 +42,8 @@ class JSONSerializerSink(ProxySink):
     def __init__(self, sink):
         self.sink = sink
 
-    def post(self, obj):
-        return self.sink.post(json.dumps(ob))
+    def write(self, obj):
+        return self.sink.write(json.dumps(ob))
 
 
 class ZlibSink(StringIO.StringIO, ProxySink):
@@ -75,13 +75,13 @@ class BufferedSink(ProxySink):
         self.batch_size = batch_size
         self.sink = sink
 
-    def post(self, chunk):
+    def write(self, chunk):
         """
-        post media docs to sink.
+        write media docs to sink.
         """
         self.buffer += chunk
         while len(self.buffer) >= self.batch_size:
-            r = self.sink.post(self.buffer[:self.batch_size])
+            r = self.sink.write(self.buffer[:self.batch_size])
             self.buffer = self.buffer[self.batch_size:]
             return r
 
@@ -89,7 +89,7 @@ class BufferedSink(ProxySink):
         """
         finalize sink, flushing the buffer to downstream sink.
         """
-        self.sink.post(self.buffer)
+        self.sink.write(self.buffer)
         return super(ProxySink, self).done()
 
 
@@ -97,7 +97,7 @@ class FileSink(SinkBase):
     def __init__(self, path):
         self.f = file(path, 'wb')
 
-    def post(self, chunk):
+    def write(self, chunk):
         return self.f.write(chunk)
 
     def done(self):
