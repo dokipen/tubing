@@ -16,12 +16,7 @@ if sys.argv[-1] == "publish":
     sys.exit()
 
 
-packages = [
-    "tubing",
-]
-
-
-date = datetime.now().strftime("b%Y%m%d_%H%M%S")
+date = datetime.now().strftime("b%Y%m%d%H%M%S")
 revision = os.environ.get("REVISION", date)
 version = minor_version + date
 with open("tubing/VERSION", "w", "utf-8") as f:
@@ -40,9 +35,8 @@ setup(
     author="Bob Corsaro",
     author_email="rcorsaro@gmail.com",
     url="http://github.com/dokipen/tubing",
-    packages=packages,
     package_data={"": ["LICENSE"], "tubing": ["VERSION"]},
-    package_dir=find_packages(exclude='tests'),
+    packages=find_packages(exclude='tests'),
     include_package_data=True,
     install_requires=[],
     license="MIT",
