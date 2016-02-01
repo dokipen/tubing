@@ -6,7 +6,7 @@ import sys
 
 from codecs import open
 from datetime import datetime
-from setuptools import setup
+from setuptools import setup, find_packages
 
 minor_version = "0.0.1"
 
@@ -42,7 +42,7 @@ setup(
     url="http://github.com/dokipen/tubing",
     packages=packages,
     package_data={"": ["LICENSE"], "tubing": ["VERSION"]},
-    package_dir={"tubing": "tubing"},
+    package_dir=find_packages(exclude='tests'),
     include_package_data=True,
     install_requires=[],
     license="MIT",
