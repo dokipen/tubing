@@ -44,7 +44,7 @@ class BulkUpdateBatcherSink(sinks.ProxySink):
 
     def done(self):
         self.sink.write(''.join(self.batch))
-        return super(sinks.ProxySink, self).done()
+        return super(BulkUpdateBatcherSink, self).done()
 
 
 class BulkSink(sinks.BaseSink):
