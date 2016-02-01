@@ -4,6 +4,7 @@ S3 Tubing extension.
 """
 
 import boto3
+import logging
 
 
 logger = logging.getLogger('tubing.ext.s3')

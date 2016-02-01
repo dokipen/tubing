@@ -93,7 +93,7 @@ class BufferedSink(ProxySink):
         return super(ProxySink, self).done()
 
 
-class FileSink(SinkBase):
+class FileSink(BaseSink):
     def __init__(self, path):
         self.f = file(path, 'wb')
 

@@ -2,7 +2,9 @@ from __future__ import print_function
 """
 Elasticsearch Extension.
 """
+import json
 import requests
+import logging
 from tubing import sinks
 
 
@@ -42,10 +44,10 @@ class BulkUpdateBatcherSink(sinks.ProxySink):
 
     def done(self):
         self.sink.write(''.join(self.batch))
-        return super(ProxySink, self).
+        return super(ProxySink, self).done()
 
 
-class BulkSink(sinks.SinkBase):
+class BulkSink(sinks.BaseSink):
     """
     Elastic search bulk writer.
     """
