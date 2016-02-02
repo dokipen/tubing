@@ -6,7 +6,7 @@ import sys
 
 from codecs import open
 from datetime import datetime
-from setuptools import setup
+from setuptools import setup, find_packages
 
 minor_version = "0.0.1"
 
@@ -14,11 +14,6 @@ minor_version = "0.0.1"
 if sys.argv[-1] == "publish":
     os.system("python setup.py sdist upload")
     sys.exit()
-
-
-packages = [
-    "tubing",
-]
 
 
 date = datetime.now().strftime("b%Y%m%d%H%M%S")
@@ -40,9 +35,8 @@ setup(
     author="Bob Corsaro",
     author_email="rcorsaro@gmail.com",
     url="http://github.com/dokipen/tubing",
-    packages=packages,
     package_data={"": ["LICENSE"], "tubing": ["VERSION"]},
-    package_dir={"tubing": "tubing"},
+    packages=find_packages(exclude='tests'),
     include_package_data=True,
     install_requires=[],
     license="MIT",

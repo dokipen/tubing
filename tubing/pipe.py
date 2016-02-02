@@ -9,9 +9,10 @@ logger = logging.getLogger('tubing.pipe')
 
 
 def pipe(source, sink):
+    logger.debug("Staring PIPE")
     try:
         for doc in source.readall():
-            sink.post(doc)
+            sink.write(doc)
 
         sink.done()
     except:
