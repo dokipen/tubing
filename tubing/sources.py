@@ -14,7 +14,6 @@ one JSON object per line::
 import json
 import logging
 import zlib
-import StringIO
 import gzip
 
 

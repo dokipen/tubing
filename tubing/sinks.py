@@ -4,9 +4,12 @@ Tubing sinks are targets for streams of data..
 """
 
 import json
-import StringIO
 import gzip
 import logging
+try:
+    from StringIO import StringIO
+except:
+    from io import StringIO
 
 
 logger = logging.getLogger('tubing.sinks')
