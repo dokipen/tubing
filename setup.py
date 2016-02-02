@@ -16,7 +16,7 @@ if sys.argv[-1] == "publish":
     sys.exit()
 
 
-date = datetime.now().strftime("b%Y%m%d%H%M%S")
+date = datetime.now().strftime(".dev%Y%m%d%H%M%S")
 revision = os.environ.get("REVISION", date)
 version = minor_version + date
 with open("tubing/VERSION", "w", "utf-8") as f:
@@ -42,6 +42,19 @@ setup(
     license="MIT",
     zip_safe=False,
     classifiers=(
+        'Development Status :: 3 - Alpha',
+
+        'Intended Audience :: Developers',
+
+        'License :: OSI Approved :: MIT License',
+
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.6',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.2',
+        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
     ),
     extras_require={
         "build": [

@@ -18,6 +18,6 @@ def pipe(source, sink):
     except:
         logger.exception("Failed pipe")
         sink.abort()
-        return "FAILED"
+        raise
 
     return "OK"
