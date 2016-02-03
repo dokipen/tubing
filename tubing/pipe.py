@@ -7,8 +7,6 @@ import logging
 
 logger = logging.getLogger('tubing.pipe')
 
-from guppy import hpy
-hp = hpy()
 
 def pipe(source, sink, amt=None):
     logger.debug("Starting PIPE")
@@ -16,7 +14,6 @@ def pipe(source, sink, amt=None):
         chunk = source.read(amt)
         while chunk:
             sink.write(chunk)
-            import gc; gc.collect()
             chunk = source.read(amt)
 
         sink.done()
