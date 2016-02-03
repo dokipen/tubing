@@ -25,5 +25,7 @@ deploy:
   on:
     distributions: sdist bdist_wheel
     repo: dokipen/tubing
+    branch: master
+    branch: release
 after_sucess:
   coveralls
