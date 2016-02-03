@@ -13,9 +13,8 @@ logger = logging.getLogger('tubing.ext.elasticsearch')
 
 class BulkUpdateBatcherSink(sinks.ProxySink):
     """
-    Creates bulk updates for Elastic Search.
-    This is an object stream handler and expects objects with
-    index() and to_dict() methods implemented.
+    Creates bulk updates for Elastic Search.  This is an object stream handler
+    and expects objects with index() and to_dict() methods implemented.
     """
     def __init__(self, sink, batch_size=7500):
         self.sink = sink

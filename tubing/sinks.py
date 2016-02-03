@@ -1,6 +1,6 @@
 from __future__ import print_function
 """
-Tubing sinks are targets for streams of data..
+Tubing sinks are targets for streams of data.
 """
 
 import json
@@ -16,6 +16,11 @@ logger = logging.getLogger('tubing.sinks')
 
 
 class BaseSink(object):
+    """
+    BaseSink is a mixin class for all Sinks providing empty impls of the sink
+    interface.
+    """
+
     def write(self, chunk):
         pass
 
@@ -28,7 +33,8 @@ class BaseSink(object):
 
 class ProxySink(object):
     """
-    expects self.sink
+    ProxySink is a mixin class with default implementations of all methods for a
+    proxy sink.
     """
 
     def write(self, chunk):
@@ -42,15 +48,27 @@ class ProxySink(object):
 
 
 class JSONSerializerSink(ProxySink):
-    def __init__(self, sink):
+    """
+    JSONSerializerSink takes an object stream and serializes it to json.
+    delimiter will be inserted after ever record.
+    """
+
+    def __init__(self, sink, delimiter="", **kwargs):
         self.sink = sink
+        self.delimiter = delimiter
+        self.json_kwargs = kwargs
 
-    def write(self, obj):
-        return self.sink.write(json.dumps(ob))
+    def write(self, objs):
+        for obj in objs:
+            line = json.dumps(obj, **self.json_kwargs)
+            self.sink.write(line + self.delimiter)
 
 
-class ZlibSink(StringIO.StringIO, ProxySink):
-    class InnerStream(StringIO.StringIO):
+class ZlibSink(ProxySink):
+    """
+    ZlibSink Gzips the binary input.
+    """
+    class InnerStream(StringIO):
         def __init__(self, sink):
             self.sink = sink
 
@@ -59,19 +77,20 @@ class ZlibSink(StringIO.StringIO, ProxySink):
 
     def __init__(self, sink):
         self.sink = sink
-        self.zipfile = gzip.GzipFile("", 'wb', 9, InnerStream(sink))
+        self.zipfile = gzip.GzipFile("", 'wb', 9, self.InnerStream(sink))
 
     def write(self, chunk):
         return self.zipfile.write(chunk)
 
     def done(self):
         self.zipfile.close()
-        return super(ProxySink, self).done()
+        return super(ZlibSink, self).done()
 
 
 class BufferedSink(ProxySink):
     """
-    Buffer output into batches before sending.
+    BufferedSink buffers output into batches before sending. It expects a text
+    stream.
     """
     def __init__(self, sink, batch_size=6000000):
         self.buffer = ""
@@ -93,10 +112,13 @@ class BufferedSink(ProxySink):
         finalize sink, flushing the buffer to downstream sink.
         """
         self.sink.write(self.buffer)
-        return super(ProxySink, self).done()
+        return super(BufferedSink, self).done()
 
 
 class FileSink(BaseSink):
+    """
+    FileSink writes data to a file.
+    """
     def __init__(self, path):
         self.f = file(path, 'wb')
 
@@ -108,3 +130,14 @@ class FileSink(BaseSink):
 
     def abort(self):
         return self.f.close()
+
+class StringIOSink(StringIO, BaseSink):
+    """
+    StringIOSink wraps a StringIO object for tubing.
+    """
+    def done(self):
+        pass
+
+    def abort(self):
+        pass
+

@@ -22,7 +22,7 @@ logger = logging.getLogger('tubing.sources')
 
 class ZlibSource(object):
     """
-    Unzip gzip a source stream.
+    ZlibSource unzips a gzipped source stream.
     """
     def __init__(self, source):
         self.source = source
@@ -35,7 +35,7 @@ class ZlibSource(object):
 
 class LineReaderSource(object):
     """
-    Allow readline on a source stream.
+    LineReaderSource allow readline on a source stream.
     """
     def __init__(self, source, chunksize=4096):
         self.source = source
@@ -92,21 +92,18 @@ class LineReaderSource(object):
 
 class JSONParserSource(object):
     """
-    Not very smart. Expects one raw JSON object per read. Works well with
-    LineReaderSource for source files with one JSON object per line.
+    JSONParserSource is not very smart. It expects one raw JSON object per read
+    and works well with LineReaderSource for source files with one JSON object
+    per line.
     """
     def __init__(self, source):
         self.source = source
 
     def read(self, amt=1):
-        logger.debug("Reading JSON object")
         response = []
         for line in self.source.read(amt):
-            logger.debug("Parsing %s"%(line))
             if line:
                 response.append(json.loads(line.strip()))
-            else:
-                response.append(None)
         return response
 
     def readobj(self):
