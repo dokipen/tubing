@@ -62,8 +62,8 @@ class LineReaderSource(object):
         newbuffer = []
         state = "outputting"
         for chunk in self.buffer:
-            if "\n" in chunk:
-                out, buf = chunk.split("\n", 1)
+            if b"\n" in chunk:
+                out, buf = chunk.split(b"\n", 1)
                 output.append(out)
                 newbuffer.append(buf)
                 state = "buffering"
@@ -78,16 +78,16 @@ class LineReaderSource(object):
             if not chunk:
                 # EOF
                 self.eof = True
-                return ''.join(output)
-            if "\n" in chunk:
-                out, buf = chunk.split("\n", 1)
+                return b''.join(output)
+            if b"\n" in chunk:
+                out, buf = chunk.split(b"\n", 1)
                 output.append(out)
                 self.buffer.append(buf)
                 state = "buffering"
             else:
                 output.append(chunk)
 
-        return ''.join(output)
+        return b''.join(output)
 
 
 class JSONParserSource(object):
@@ -96,14 +96,16 @@ class JSONParserSource(object):
     and works well with LineReaderSource for source files with one JSON object
     per line.
     """
-    def __init__(self, source):
+    def __init__(self, source, encoding='utf-8'):
         self.source = source
+        self.encoding = encoding
 
     def read(self, amt=1):
         response = []
         for line in self.source.read(amt):
             if line:
-                response.append(json.loads(line.strip()))
+                j = line.decode(self.encoding).strip()
+                response.append(json.loads(j))
         return response
 
     def readobj(self):
