@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import os.path
 import sys
 
 from codecs import open
@@ -18,7 +19,7 @@ if sys.argv[-1] == "publish":
 
 VERSIONFILE = os.path.join(os.path.dirname(__file__), 'tubing/VERSION')
 if os.path.exists(os.path.join(os.path.dirname(__file__), 'tubing/VERSION')):
-    with file(VERSIONFILE, "r", "utf-8") as f:
+    with open(VERSIONFILE, "r", "utf-8") as f:
         version = f.read().strip()
 else:
     if os.environ.get("TRAVIS_BRANCH") == "release":
