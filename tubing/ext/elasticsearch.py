@@ -34,12 +34,13 @@ class BulkUpdateBatcherSink(sinks.ProxySink):
             doc=doc.to_dict(),
         ))
 
-    def write(self, doc):
-        self.batch.append("{}\n{}\n".format(self.action(doc), self.update(doc)))
-        if len(self.batch) > self.batch_size:
-            batch = ''.join(self.batch[:self.batch_size])
-            self.batch = self.batch[self.batch_size:]
-            self.sink.write(batch)
+    def write(self, docs):
+        for doc in docs:
+            self.batch.append("{}\n{}\n".format(self.action(doc), self.update(doc)))
+            if len(self.batch) > self.batch_size:
+                batch = ''.join(self.batch[:self.batch_size])
+                self.batch = self.batch[self.batch_size:]
+                self.sink.write(batch)
 
     def done(self):
         self.sink.write(''.join(self.batch))

@@ -45,7 +45,7 @@ class LineReaderSource(object):
 
     def read(self, amt=1):
         response = []
-        for _ in range(0, amt):
+        for _ in range(0, amt or 1):
             response.append(self.readline())
             if self.eof:
                 break
