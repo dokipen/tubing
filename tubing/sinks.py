@@ -93,7 +93,7 @@ class BufferedSink(ProxySink):
     stream.
     """
     def __init__(self, sink, batch_size=6000000):
-        self.buffer = ""
+        self.buffer = b""
         self.batch_size = batch_size
         self.sink = sink
 
