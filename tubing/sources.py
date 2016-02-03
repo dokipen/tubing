@@ -69,8 +69,6 @@ class LineReaderSource(object):
                 state = "buffering"
             elif state == "outputting":
                 output.append(chunk)
-            else:
-                newbuffer.append(chunk)
 
         self.buffer = newbuffer
         while state == "outputting":
@@ -107,6 +105,3 @@ class JSONParserSource(object):
                 j = line.decode(self.encoding).strip()
                 response.append(json.loads(j))
         return response
-
-    def readobj(self):
-        return self.read()[0]

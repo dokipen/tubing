@@ -4,3 +4,4 @@ tubing/VERSION
 dist/
 build/
 .ruby-*
+.coverage
