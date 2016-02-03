@@ -13,11 +13,6 @@ SOURCE_DATA = [
     dict(name="Devyn", age=18),
     dict(name="Calvin", age=13),
 ]
-SERIALIZED_DATA = """{"age":38,"name":"Bob"}
-{"age":38,"name":"Carrie"}
-{"age":18,"name":"Devyn"}
-{"age":13,"name":"Calvin"}
-"""
 
 expected0_path = os.path.join(os.path.dirname(__file__), 'expected0.gz')
 
@@ -32,14 +27,17 @@ class PipeTestCase(unittest.TestCase):
         for obj in SOURCE_DATA:
             sink.write([obj])
 
-        self.assertEqual(buffer0.getvalue(), SERIALIZED_DATA)
-
         buffer0.seek(0)
 
         buffer1 = sinks.StringIOSink()
         source = sources.JSONParserSource(sources.LineReaderSource(buffer0))
-        sink = sinks.JSONSerializerSink(sinks.ZlibSink(sinks.BufferedSink(buffer1)))
+        sink = sinks.JSONSerializerSink(sinks.ZlibSink(sinks.BufferedSink(buffer1)), delimiter="\n")
         pipe.pipe(source, sink, amt=1)
 
-        with file(expected0_path) as f:
-            self.assertEqual(f.read(), buffer1.getvalue())
+        buffer1.seek(0)
+        source = sources.JSONParserSource(sources.LineReaderSource(sources.ZlibSource(buffer1)))
+        self.assertEqual(source.read(1), [SOURCE_DATA[0]])
+        self.assertEqual(source.read(1), [SOURCE_DATA[1]])
+        self.assertEqual(source.read(1), [SOURCE_DATA[2]])
+        self.assertEqual(source.read(1), [SOURCE_DATA[3]])
+        self.assertEqual(source.read(), [])
