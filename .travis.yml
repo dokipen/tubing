@@ -13,7 +13,7 @@ install:
 - pip install -e .[build]
 - pip list
 script:
-- nosetests
+- nosetests --with-coverage --cover-package=tubing
 notifications:
   email:
   - rcorsaro@gmail.com
@@ -25,3 +25,5 @@ deploy:
   on:
     distributions: sdist bdist_wheel
     repo: dokipen/tubing
+after_sucess:
+  coveralls

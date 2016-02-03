@@ -65,6 +65,7 @@ setup(
         "build": [
             "nose",
             "unittest2",
+            "coveralls",
         ],
         "s3": [
             "boto3",
