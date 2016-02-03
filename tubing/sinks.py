@@ -10,6 +10,7 @@ try:
     from StringIO import StringIO
 except:
     from io import StringIO
+from io import BytesIO
 
 
 logger = logging.getLogger('tubing.sinks')
@@ -133,9 +134,9 @@ class FileSink(BaseSink):
     def abort(self):
         return self.f.close()
 
-class StringIOSink(StringIO, BaseSink):
+class BytesIOSink(BytesIO, BaseSink):
     """
-    StringIOSink wraps a StringIO object for tubing.
+    BytesIOSink wraps a BytesIO object for tubing.
     """
     def done(self):
         pass

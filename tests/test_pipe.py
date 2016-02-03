@@ -1,10 +1,7 @@
 import logging
 import os.path
 import unittest2 as unittest
-try:
-    from StringIO import StringIO
-except:
-    from io import StringIO
+from io import BytesIO
 from tubing import sinks, sources, pipe
 
 SOURCE_DATA = [
@@ -22,14 +19,14 @@ logger = logging.getLogger("tubing.test_pipe")
 
 class PipeTestCase(unittest.TestCase):
     def testPipe(self):
-        buffer0 = StringIO()
+        buffer0 = BytesIO()
         sink = sinks.JSONSerializerSink(buffer0, "\n", separators=(',', ':'))
         for obj in SOURCE_DATA:
             sink.write([obj])
 
         buffer0.seek(0)
 
-        buffer1 = sinks.StringIOSink()
+        buffer1 = sinks.BytesIOSink()
         source = sources.JSONParserSource(sources.LineReaderSource(buffer0))
         sink = sinks.JSONSerializerSink(sinks.ZlibSink(sinks.BufferedSink(buffer1)), delimiter="\n")
         pipe.pipe(source, sink, amt=1)
