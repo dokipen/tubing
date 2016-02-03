@@ -16,17 +16,21 @@ if sys.argv[-1] == "publish":
     sys.exit()
 
 
-if os.environ.get("TRAVIS_BRANCH") == "release":
-    revision = "r" + os.environ.get("TRAVIS_BUILD_NUMBER")
-    version = minor_version + revision
+VERSIONFILE = os.path.join(os.path.dirname(__file__), 'tubing/VERSION')
+if os.path.exists(os.path.join(os.path.dirname(__file__), 'tubing/VERSION')):
+    with file(VERSIONFILE, "r", "utf-8") as f:
+        version = f.read().strip()
 else:
-    date = datetime.now().strftime(".dev%Y%m%d%H%M%S")
-    revision = os.environ.get("REVISION", date)
-    version = minor_version + revision
+    if os.environ.get("TRAVIS_BRANCH") == "release":
+        revision = "r" + os.environ.get("TRAVIS_BUILD_NUMBER")
+        version = minor_version + revision
+    else:
+        date = datetime.now().strftime(".dev%Y%m%d%H%M%S")
+        revision = os.environ.get("REVISION", date)
+        version = minor_version + revision
 
-with open("tubing/VERSION", "w", "utf-8") as f:
+with open(VERSIONFILE, "w", "utf-8") as f:
     f.write(version)
-
 
 with open("README.rst", "r", "utf-8") as f:
     readme = f.read()
