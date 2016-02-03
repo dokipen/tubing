@@ -53,15 +53,17 @@ class JSONSerializerSink(ProxySink):
     delimiter will be inserted after ever record.
     """
 
-    def __init__(self, sink, delimiter="", **kwargs):
+    def __init__(self, sink, delimiter="", encoding="utf-8", **kwargs):
         self.sink = sink
         self.delimiter = delimiter
         self.json_kwargs = kwargs
+        self.encoding = encoding
 
     def write(self, objs):
         for obj in objs:
-            line = json.dumps(obj, **self.json_kwargs)
-            self.sink.write(line + self.delimiter)
+            line = json.dumps(obj, **self.json_kwargs) + self.delimiter
+            chunk = line.encode(self.encoding)
+            self.sink.write(chunk)
 
 
 class ZlibSink(ProxySink):
