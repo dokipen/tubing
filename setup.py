@@ -18,11 +18,11 @@ if sys.argv[-1] == "publish":
 
 if os.environ.get("TRAVIS_BRANCH") == "release":
     revision = "r" + os.environ.get("TRAVIS_BUILD_NUMBER")
-    version = minor_version + date
+    version = minor_version + revision
 else:
     date = datetime.now().strftime(".dev%Y%m%d%H%M%S")
     revision = os.environ.get("REVISION", date)
-    version = minor_version + date
+    version = minor_version + revision
 
 with open("tubing/VERSION", "w", "utf-8") as f:
     f.write(version)
