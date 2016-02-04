@@ -19,13 +19,13 @@ logger = logging.getLogger("tubing.test_pipe")
 
 class PipeTestCase(unittest.TestCase):
     def testPipe(self):
-        buffer0 = BytesIO()
+        buffer0 = sinks.BytesIOSink()
         sink = sinks.JSONSerializerSink(buffer0, "\n", separators=(',', ':'))
         for obj in SOURCE_DATA:
             sink.write([obj])
+        sink.done()
 
         buffer0.seek(0)
-
         buffer1 = sinks.BytesIOSink()
         source = sources.JSONParserSource(sources.LineReaderSource(buffer0))
         sink = sinks.JSONSerializerSink(sinks.ZlibSink(sinks.BufferedSink(buffer1)), delimiter="\n")
@@ -38,3 +38,35 @@ class PipeTestCase(unittest.TestCase):
         self.assertEqual(source.read(1), [SOURCE_DATA[2]])
         self.assertEqual(source.read(1), [SOURCE_DATA[3]])
         self.assertEqual(source.read(), [])
+
+    def testFailingSink(self):
+        class FailSink(object):
+            def __init__(self):
+                self._done = False
+                self._abort = False
+
+            def write(self, *args, **kwargs):
+                raise ValueError("Meant to fail")
+
+            def done(self):
+                self._done = True
+
+            def abort(self):
+                self._abort = True
+
+        buffer0 = sinks.BytesIOSink()
+        sink = sinks.JSONSerializerSink(buffer0, "\n", separators=(',', ':'))
+        for obj in SOURCE_DATA:
+            sink.write([obj])
+        sink.done()
+
+        buffer0.seek(0)
+        s = FailSink()
+        try:
+            pipe.pipe(buffer0, s)
+            self.assert_(False, "Expected Failure")
+        except ValueError:
+            pass
+
+        self.assert_(s._abort)
+        self.assert_(not s._done)

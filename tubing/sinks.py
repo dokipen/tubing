@@ -8,7 +8,7 @@ import gzip
 import logging
 try:
     from StringIO import StringIO
-except:
+except:         # pragma: no cover
     from io import StringIO
 from io import BytesIO
 
@@ -123,7 +123,7 @@ class FileSink(BaseSink):
     FileSink writes data to a file.
     """
     def __init__(self, path):
-        self.f = file(path, 'wb')
+        self.f = open(path, 'wb')
 
     def write(self, chunk):
         return self.f.write(chunk)
