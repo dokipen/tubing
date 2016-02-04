@@ -43,10 +43,12 @@ class LineReaderSource(object):
         self.buffer = []
         self.eof = False
 
-    def read(self, amt=1):
+    def read(self, amt=None):
         response = []
         for _ in range(0, amt or 1):
-            response.append(self.readline())
+            l = self.readline()
+            if l:
+                response.append(l)
             if self.eof:
                 break
         return response
@@ -56,7 +58,7 @@ class LineReaderSource(object):
         Read a single line.
         """
         if self.eof:
-            return b''
+            return None
 
         output = []
         newbuffer = []
@@ -76,7 +78,7 @@ class LineReaderSource(object):
             if not chunk:
                 # EOF
                 self.eof = True
-                return b''.join(output)
+                return b''.join(output) or None
             if b"\n" in chunk:
                 out, buf = chunk.split(b"\n", 1)
                 output.append(out)
@@ -85,7 +87,7 @@ class LineReaderSource(object):
             else:
                 output.append(chunk)
 
-        return b''.join(output)
+        return b''.join(output) or None
 
 
 class JSONParserSource(object):

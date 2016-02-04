@@ -28,20 +28,20 @@ class SourcesTestCase(unittest.TestCase):
 
         # make chunk_size small to excersize chunking
         source = sources.LineReaderSource(buffer0, chunksize=10)
-        self.assertNotEqual(source.read(1), [b''])
-        self.assertNotEqual(source.read(1), [b''])
-        self.assertNotEqual(source.read(1), [b''])
-        self.assertNotEqual(source.read(1), [b''])
-        self.assertEqual(source.read(1), [b''])
-        self.assertEqual(source.read(1), [b''])
+        self.assertNotEqual(source.read(1), [])
+        self.assertNotEqual(source.read(1), [])
+        self.assertNotEqual(source.read(1), [])
+        self.assertNotEqual(source.read(1), [])
+        self.assertEqual(source.read(1), [])
+        self.assertEqual(source.read(1), [])
 
         buffer0.seek(0)
 
         # make chunk_size large to excersize splits
         source = sources.LineReaderSource(buffer0, chunksize=1000000)
-        self.assertNotEqual(source.read(1), [b''])
-        self.assertNotEqual(source.read(1), [b''])
-        self.assertNotEqual(source.read(1), [b''])
-        self.assertNotEqual(source.read(1), [b''])
-        self.assertEqual(source.read(1), [b''])
-        self.assertEqual(source.read(1), [b''])
+        self.assertNotEqual(source.read(1), [])
+        self.assertNotEqual(source.read(1), [])
+        self.assertNotEqual(source.read(1), [])
+        self.assertNotEqual(source.read(1), [])
+        self.assertEqual(source.read(1), [])
+        self.assertEqual(source.read(1), [])
