@@ -15,8 +15,6 @@
 
 .. image:: https://imgur.com/Q9Lv0xo.png
      :target: https://github.com/dokipen/tubing
-
-Tubing
 ======
 
 Tubing is a Python I/O library.
