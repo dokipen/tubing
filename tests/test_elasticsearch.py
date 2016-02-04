@@ -1,12 +1,12 @@
 import unittest2 as unittest
+import json
 from tubing.ext import elasticsearch
 from tubing import sinks, sources, pipe
 
-EXPECTED = b"""{"update": {"_type": "test", "_id": "id0"}}
-{"doc": {"name": "id0"}, "doc_as_upsert": true}
-{"update": {"_type": "test-child", "_id": "id1", "parent": "id0"}}
-{"doc": {"name": "id1"}, "doc_as_upsert": false}
-"""
+EXPECTED = [{"update": {"_id": "id0", "_type": "test"}},
+            {"doc": {"name": "id0"}, "doc_as_upsert": True},
+            {"update": {"_id": "id1", "_type": "test-child", "parent": "id0"}},
+            {"doc": {"name": "id1"}, "doc_as_upsert": False}]
 
 class ElasticSearchTestCase(unittest.TestCase):
     def test_es(self):
@@ -18,14 +18,19 @@ class ElasticSearchTestCase(unittest.TestCase):
         sink.done()
 
         buffer0.seek(0)
-        self.assertEqual(EXPECTED, buffer0.getvalue())
+        f = []
+        for line in buffer0.getvalue().split(b'\n'):
+            if line:
+                f.append(json.loads(line.decode('utf-8')))
+
+        self.assertEqual(EXPECTED, f)
 
     def test_batching(self):
         buffer0 =  sinks.BytesIOSink()
         sink = elasticsearch.BulkBatcherSink(buffer0, batch_size=50)
 
         def make_du(i):
-            esid = 'id{}'.format(i)
+            esid = 'id%d'%i
             return elasticsearch.DocUpdate(
                 esid=esid,
                 doc=dict(name=esid),
