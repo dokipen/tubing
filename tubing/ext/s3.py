@@ -10,7 +10,7 @@ import logging
 logger = logging.getLogger('tubing.ext.s3')
 
 
-def S3Source(bucket, key):
+def S3Source(bucket, key): # pragma: no cover
     """
     Create an S3 Source stream.
     """

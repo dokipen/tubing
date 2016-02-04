@@ -1,6 +1,6 @@
 import unittest2 as unittest
 import json
-from tubing.ext import elasticsearch
+from tubing.ext import elasticsearch, s3
 from tubing import sinks, sources, pipe
 
 EXPECTED = [{"update": {"_id": "id0", "_type": "test"}},

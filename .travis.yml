@@ -9,7 +9,7 @@ python:
 - pypy
 - pypy3
 install:
-- pip install -e .[build]
+- pip install -e .[build,s3,elasticsearch]
 - pip list
 script:
 - nosetests --with-coverage --cover-package=tubing
