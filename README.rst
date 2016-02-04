@@ -13,6 +13,9 @@
 .. image:: https://img.shields.io/pypi/wheel/tubing.svg
     :target: https://pypi.python.org/pypi/tubing/
 
+.. image:: https://imgur.com/Q9Lv0xo.png
+     :target: https://github.com/dokipen/tubing
+
 Tubing
 ======
 
