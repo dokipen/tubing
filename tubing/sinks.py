@@ -8,7 +8,7 @@ import gzip
 import logging
 try:
     from StringIO import StringIO
-except:
+except:         # pragma: no cover
     from io import StringIO
 from io import BytesIO
 
