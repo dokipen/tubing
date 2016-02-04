@@ -32,11 +32,11 @@ class SinksTestCase(unittest.TestCase):
 
         # make chunk_size small to excersize chunking
         source = sources.LineReaderSource(buffer0, chunksize=10)
-        self.assertNotEqual(source.read(1), [''])
-        self.assertNotEqual(source.read(1), [''])
-        self.assertNotEqual(source.read(1), [''])
-        self.assertNotEqual(source.read(1), [''])
-        self.assertEqual(source.read(1), [''])
+        self.assertNotEqual(source.read(1), [b''])
+        self.assertNotEqual(source.read(1), [b''])
+        self.assertNotEqual(source.read(1), [b''])
+        self.assertNotEqual(source.read(1), [b''])
+        self.assertEqual(source.read(1), [b''])
 
     def testBaseAndProxySink(self):
         base = sinks.BaseSink()
@@ -49,18 +49,18 @@ class SinksTestCase(unittest.TestCase):
                 self.sink = sink
 
         myproxy = MyProxy(sinks.BytesIOSink())
-        myproxy.write('test')
+        myproxy.write(b'test')
         myproxy.done()
         myproxy.abort()
-        self.assertEqual('test', myproxy.sink.getvalue())
+        self.assertEqual(b'test', myproxy.sink.getvalue())
 
     def testFileSink(self):
         tmp, path = tempfile.mkstemp()
         sink = sinks.FileSink(path)
-        sink.write('hello')
+        sink.write(b'hello')
         sink.done()
         sink = sinks.FileSink(path)
-        sink.write('hello')
+        sink.write(b'hello')
         sink.abort()
         os.unlink(path)
 

@@ -56,7 +56,7 @@ class LineReaderSource(object):
         Read a single line.
         """
         if self.eof:
-            return ''
+            return b''
 
         output = []
         newbuffer = []
