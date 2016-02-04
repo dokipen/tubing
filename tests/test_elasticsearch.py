@@ -2,7 +2,7 @@ import unittest2 as unittest
 from tubing.ext import elasticsearch
 from tubing import sinks, sources, pipe
 
-EXPECTED = """{"update": {"_type": "test", "_id": "id0"}}
+EXPECTED = b"""{"update": {"_type": "test", "_id": "id0"}}
 {"doc": {"name": "id0"}, "doc_as_upsert": true}
 {"update": {"_type": "test-child", "_id": "id1", "parent": "id0"}}
 {"doc": {"name": "id1"}, "doc_as_upsert": false}
@@ -32,7 +32,7 @@ class ElasticSearchTestCase(unittest.TestCase):
                 doc_type='test',
             )
 
-        sink.write([make_du(i) for i in xrange(0,150)])
+        sink.write([make_du(i) for i in range(0,150)])
         sink.done()
 
-        self.assertEqual(301, len(buffer0.getvalue().split("\n")))
+        self.assertEqual(301, len(buffer0.getvalue().split(b"\n")))

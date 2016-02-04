@@ -37,13 +37,13 @@ class DocUpdate(object):
         )
         if self.parent_esid:
             action['update']['parent'] = self.parent_esid
-        return json.dumps(action)
+        return json.dumps(action).encode('utf-8')
 
     def update(self):
         return json.dumps(dict(
             doc_as_upsert=self.doc_as_upsert,
             doc=self.doc,
-        ))
+        )).encode('utf-8')
 
 
 
@@ -59,14 +59,14 @@ class BulkBatcherSink(sinks.ProxySink):
 
     def write(self, docs):
         for doc in docs:
-            self.batch.append("{}\n{}\n".format(doc.action(), doc.update()))
+            self.batch.append(doc.action() + b"\n" + doc.update() + b"\n")
             if len(self.batch) > self.batch_size:
-                batch = ''.join(self.batch[:self.batch_size])
+                batch = b''.join(self.batch[:self.batch_size])
                 self.batch = self.batch[self.batch_size:]
                 self.sink.write(batch)
 
     def done(self):
-        self.sink.write(''.join(self.batch))
+        self.sink.write(b''.join(self.batch))
         return super(BulkBatcherSink, self).done()
 
 
