@@ -26,6 +26,7 @@ class SinksTestCase(unittest.TestCase):
         )
         for obj in SOURCE_DATA:
             sink.write([obj])
+        sink.done()
 
         buffer0.seek(0)
 
