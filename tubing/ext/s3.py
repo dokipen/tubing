@@ -19,7 +19,7 @@ def S3Source(bucket, key): # pragma: no cover
     return response['Body']
 
 
-class S3Sink(object):
+class S3Sink(object): # pragma: no cover
     """
     Send MediaDocs to S3. Expects AWS environmental variables to be set.
     """
