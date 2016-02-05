@@ -70,6 +70,9 @@ class BulkBatcherSink(sinks.ProxySink):
         return super(BulkBatcherSink, self).done()
 
 
+class ElasticSearchError(Exception):
+    pass
+
 class BulkSink(sinks.BaseSink): # pragma: no cover
     """
     Elastic search bulk writer.
@@ -91,5 +94,5 @@ class BulkSink(sinks.BaseSink): # pragma: no cover
         logger.debug("POSTING: {}".format(chunk))
         resp = requests.post(self._url(), data=chunk, auth=self._auth())
         resp_obj = json.loads(resp.text)
-        logger.debug(json.dumps(resp_obj, indent=2))
-        # TODO: handle errors
+        if resp_obj['errors']:
+            raise ElasticSearchError(resp)
