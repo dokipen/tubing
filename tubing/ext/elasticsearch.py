@@ -93,6 +93,7 @@ class BulkSink(sinks.BaseSink): # pragma: no cover
     def write(self, chunk):
         logger.debug("POSTING: {}".format(chunk))
         resp = requests.post(self._url(), data=chunk, auth=self._auth())
+        logger.debug(resp.text)
         resp_obj = json.loads(resp.text)
         if resp_obj['errors']:
-            raise ElasticSearchError(resp)
+            raise ElasticSearchError(resp.text)
