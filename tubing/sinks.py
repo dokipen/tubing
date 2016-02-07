@@ -16,13 +16,22 @@ from io import BytesIO
 logger = logging.getLogger('tubing.sinks')
 
 
-class Objects(list):
-    def __init__(self, amt=None):
-        self.amt = amt
+def gen_fn(cls):
+    def gen(chunk_size=2 ** 8, *args, **kwargs):
+        def fn(source):
+            sink = cls(*args, **kwargs)
+            chunk = source.read(chunk_size)
+            sink.write(chunk)
+            while chunk:
+                chunk = source.read(chunk_size)
+                sink.write(chunk)
+            return sink
+        return fn
+    return gen
 
-    def __call__(self, source):
-        chunk = source.read(self.amt)
-        self.extend(chunk)
-        while chunk:
-            chunk = source.read(self.amt)
-            self.extend(chunk)
+
+class ObjectsSink(list):
+    def write(self, objs):
+        self.extend(objs)
+
+Objects = gen_fn(ObjectsSink)

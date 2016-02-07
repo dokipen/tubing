@@ -21,8 +21,7 @@ class PipeTestCase(unittest.TestCase):
 
     def testPipe(self):
         source = sources.Objects(SOURCE_DATA)
-        sink = sinks.Objects()
-        source |  pipes.JSONSerializer(separators=(',', ':')) | pipes.Joined(by=b"\n") | pipes.Gzip() | pipes.Gunzip() | pipes.Split(on=b"\n") | pipes.JSONParser() | sink
+        sink = source | pipes.JSONSerializer(separators=(',', ':')) | pipes.Joined(by=b"\n") | pipes.Gzip() | pipes.Gunzip() | pipes.Split(on=b"\n") | pipes.JSONParser() | sinks.Objects()
 
         self.assertEqual(sink[0], SOURCE_DATA[0])
         self.assertEqual(sink[1], SOURCE_DATA[1])

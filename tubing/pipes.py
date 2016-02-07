@@ -32,7 +32,9 @@ class PipeMixin(object):
     source.read.
     """
     def __or__(self, other):
-        return other(self)
+        r = other(self)
+        logger.debug("Returning {}".format(r))
+        return r
 
     def _read_complete(self, amt):
         return self.eof and amt and amt > len(self.buffer)
