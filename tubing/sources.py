@@ -3,13 +3,31 @@ from __future__ import print_function
 Tubing sources are defined here.
 """
 import logging
-import io
 
 
 logger = logging.getLogger('tubing.sources')
 
 
-class Objects(object):
+class MakeSource(object):
+    def __init__(self, reader_cls):
+        self.reader_cls = reader_cls
+
+    def __call__(self, *args, **kwargs):
+        return Source(self.reader_cls(*args, **kwargs))
+
+
+class Source(object):
+    def __init__(self, source):
+        self.source = source
+
+    def read(self, amt):
+        return self.source.read(amt)
+
+    def __or__(self, other):
+        return other(self)
+
+
+class ObjectReader(object):
     """
     Outputs a list of objects.
     """
@@ -20,5 +38,5 @@ class Objects(object):
         r, self.objs = self.objs[:amt], self.objs[amt or len(self.objs):]
         return r, len(self.objs) == 0
 
-    def __or__(self, pipe):
-        return pipe(self)
+
+Objects = MakeSource(ObjectReader)

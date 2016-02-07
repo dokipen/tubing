@@ -11,8 +11,6 @@ SOURCE_DATA = [
     dict(name="Calvin", age=13),
 ]
 
-expected0_path = os.path.join(os.path.dirname(__file__), 'expected0.gz')
-
 
 logger = logging.getLogger("tubing.test_pipe")
 

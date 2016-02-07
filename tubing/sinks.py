@@ -2,15 +2,8 @@ from __future__ import print_function
 """
 Tubing sinks are targets for streams of data.
 """
-
-import json
-import gzip
 import logging
-try:
-    from StringIO import StringIO
-except:         # pragma: no cover
-    from io import StringIO
-from io import BytesIO
+import io
 
 
 logger = logging.getLogger('tubing.sinks')
@@ -31,7 +24,6 @@ class MakeSink(object):
                 sink.write(chunk)
                 while not eof:
                     chunk, eof = source.read(chunk_size)
-                    logger.debug("Got chunk {}".format(chunk))
                     sink.write(chunk)
                 hasattr(sink, 'done') and sink.done()
                 return sink
@@ -48,5 +40,5 @@ class ObjectsSink(list):
         self.extend(objs)
 
 
-
 Objects = MakeSink(ObjectsSink, 2 ** 4)
+BytesIO = MakeSink(io.BytesIO)

@@ -6,10 +6,12 @@ import logging
 import json
 import zlib
 import gzip
-import io
 
 
 logger = logging.getLogger('tubing.pipes')
+
+
+DEBUG = False
 
 
 # Some complicated closures to support our kickass API. This is the infamous
@@ -47,11 +49,14 @@ class Pipe(object):
         return other(self)
 
     def _read_complete(self, amt):
-        return self.eof and amt and amt > len(self.buffer)
+        return self.eof or amt and self.buffer and len(self.buffer) >= amt
 
     def _shift_buffer(self, amt):
-        r, self.buffer = self.buffer[:amt], self.buffer[amt or len(self.buffer):]
-        return r
+        if self.buffer:
+            r, self.buffer = self.buffer[:amt], self.buffer[amt or len(self.buffer):]
+            return r
+        else:
+            return b''
 
     def _close(self):
         pass
@@ -64,6 +69,7 @@ class Pipe(object):
 
     def read(self, amt=None):
         try:
+            logger.debug("in read")
             while not self._read_complete(amt):
                 inchunk, self.eof = self.source.read(self.chunk_size)
                 if inchunk:
@@ -73,8 +79,11 @@ class Pipe(object):
                 if self.eof and hasattr(self.transformer, 'close'):
                     self.append(self.transformer.close())
 
-            eof = (amt >= len(self.buffer))
-            return self._shift_buffer(amt), eof
+            if self.eof:
+                if amt and len(self.buffer) > amt:
+                    return self._shift_buffer(amt), False
+                else:
+                    return self._shift_buffer(amt), True
         except:
             logger.exception("Pipe failed")
             hasattr(self.transformer, 'abort') and self.transformer.abort()
