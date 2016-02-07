@@ -18,8 +18,7 @@ class Objects(object):
 
     def read(self, amt=None):
         r, self.objs = self.objs[:amt], self.objs[amt or len(self.objs):]
-        logger.debug("Returning {}".format(r))
-        return r
+        return r, len(self.objs) == 0
 
     def __or__(self, pipe):
         return pipe(self)

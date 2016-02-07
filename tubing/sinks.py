@@ -16,22 +16,37 @@ from io import BytesIO
 logger = logging.getLogger('tubing.sinks')
 
 
-def gen_fn(cls):
-    def gen(chunk_size=2 ** 8, *args, **kwargs):
+class MakeSink(object):
+    def __init__(self, sink_cls, default_chunk_size=None):
+        self.sink_cls = sink_cls
+        self.default_chunk_size = default_chunk_size
+
+    def __call__(self, chunk_size=None, *args, **kwargs):
+        chunk_size = chunk_size or self.default_chunk_size
+
         def fn(source):
-            sink = cls(*args, **kwargs)
-            chunk = source.read(chunk_size)
-            sink.write(chunk)
-            while chunk:
-                chunk = source.read(chunk_size)
+            try:
+                sink = self.sink_cls(*args, **kwargs)
+                chunk, eof = source.read(chunk_size)
                 sink.write(chunk)
-            return sink
+                while not eof:
+                    chunk, eof = source.read(chunk_size)
+                    logger.debug("Got chunk {}".format(chunk))
+                    sink.write(chunk)
+                hasattr(sink, 'done') and sink.done()
+                return sink
+            except:
+                logger.exception("Pipe failed")
+                hasattr(sink, 'abort') and sink.abort()
+                raise
+
         return fn
-    return gen
 
 
 class ObjectsSink(list):
     def write(self, objs):
         self.extend(objs)
 
-Objects = gen_fn(ObjectsSink)
+
+
+Objects = MakeSink(ObjectsSink, 2 ** 4)

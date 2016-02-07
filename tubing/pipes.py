@@ -14,15 +14,20 @@ logger = logging.getLogger('tubing.pipes')
 
 # Some complicated closures to support our kickass API. This is the infamous
 # factory-factory pattern in Python!
-def gen_fn(pipe_cls):
-    def gen(*args, **kwargs):
+class MakePipe(object):
+    def __init__(self, transformer_cls, default_chunk_size=2 ** 16):
+        self.transformer_cls = transformer_cls
+        self.default_chunk_size = default_chunk_size
+
+    def __call__(self, chunk_size=None, *args, **kwargs):
+        chunk_size = chunk_size or self.default_chunk_size
         def fn(source):
-            return pipe_cls(source, *args, **kwargs)
+            transformer = self.transformer_cls(*args, **kwargs)
+            return Pipe(source, chunk_size, transformer)
         return fn
-    return gen
 
 
-class PipeMixin(object):
+class Pipe(object):
     """
     PipeMixin does all the grunt work that most pipe classes need to do.
     Children should implement _chunk and _close and make sure they have
@@ -31,10 +36,15 @@ class PipeMixin(object):
     that is the same type as buffer. chunk_size is an int and used to call
     source.read.
     """
+    def __init__(self, source, chunk_size, transformer):
+        self.source = source
+        self.chunk_size = chunk_size
+        self.transformer = transformer
+        self.eof = False
+        self.buffer = None
+
     def __or__(self, other):
-        r = other(self)
-        logger.debug("Returning {}".format(r))
-        return r
+        return other(self)
 
     def _read_complete(self, amt):
         return self.eof and amt and amt > len(self.buffer)
@@ -46,172 +56,150 @@ class PipeMixin(object):
     def _close(self):
         pass
 
+    def append(self, chunk):
+        if self.buffer:
+            self.buffer += chunk
+        else:
+            self.buffer = chunk
+
     def read(self, amt=None):
-        while not self._read_complete(amt):
-            chunk = self._chunk()
-            if chunk:
-                self.buffer += chunk
-            else:
-                self.eof = True
-                self._close()
-                break
+        try:
+            while not self._read_complete(amt):
+                inchunk, self.eof = self.source.read(self.chunk_size)
+                if inchunk:
+                    outchunk = self.transformer.transform(inchunk)
+                    if outchunk:
+                        self.append(outchunk)
+                if self.eof and hasattr(self.transformer, 'close'):
+                    self.append(self.transformer.close())
 
-        return self._shift_buffer(amt)
+            eof = (amt >= len(self.buffer))
+            return self._shift_buffer(amt), eof
+        except:
+            logger.exception("Pipe failed")
+            hasattr(self.transformer, 'abort') and self.transformer.abort()
+            raise
 
 
-class GunzipPipe(PipeMixin):
+
+class GunzipTransformer(object):
     """
     ZlibSource unzips a gzipped source stream.
     """
-    def __init__(self, source, chunk_size=2 ** 16):
-        self.source = source
+    def __init__(self):
         self.dec = zlib.decompressobj(32 + zlib.MAX_WBITS)
-        self.chunk_size = chunk_size
-        self.buffer = b''
-        self.eof = False
 
-    def _chunk(self):
-        r = b''
-        while not self.eof and len(r) == 0:
-            chunk = self.source.read(self.chunk_size)
-            if chunk:
-                r += self.dec.decompress(chunk)
-            else:
-                self.eof = True
-        return r
+    def transform(self, chunk):
+        return self.dec.decompress(chunk)
 
 
-Gunzip = gen_fn(GunzipPipe)
+Gunzip = MakePipe(GunzipTransformer)
 
 
-class GzipPipe(PipeMixin):
+class GzipTransformer(object):
     """
     ZlibSink Gzips the binary input.
     """
-    def __init__(self, source, chunk_size=2 ** 16, compression=9):
-        self.source = source
-        self.chunk_size = chunk_size
-        self.inbuffer = b''
+    def __init__(self, compression=9):
         self.buffer = b''
-        self.eof = False
-        self.zipfile = gzip.GzipFile("", 'wb', 9, self)
+        self.zipfile = gzip.GzipFile("", 'wb', compression, self)
 
     def write(self, b):
-        self.inbuffer += b
+        self.buffer += b
 
-    def _chunk(self):
-        while not self.eof and len(self.inbuffer) == 0:
-            chunk = self.source.read(self.chunk_size)
-            if chunk:
-                self.zipfile.write(chunk)
-            else:
-                self.zipfile.close()
-                self.eof = True
-
-        r = self.inbuffer
-        self.inbuffer = r''
+    def transform(self, chunk):
+        self.zipfile.write(chunk)
+        r = self.buffer
+        self.buffer = r''
         return r
 
+    def close(self):
+        self.zipfile.close()
+        return self.buffer
 
-Gzip = gen_fn(GzipPipe)
+
+Gzip = MakePipe(GzipTransformer)
 
 
-class SplitPipe(PipeMixin):
+class SplitTransformer(object):
     """
     SplitterPipe splits source data on a delimiter.
     """
-    def __init__(self, source, chunk_size=2 ** 16, on=b'\n'):
-        self.source = source
-        self.chunk_size = chunk_size
+    def __init__(self, on=b'\n'):
         self.on = on
-        self.chunk_buffer = b'' # read buffer
-        self.buffer = [] # lines buffer
-        self.eof = False
+        self.buffer = b'' # read buffer
 
-    def _chunk(self):
+    def transform(self, chunk):
         """
         We go through all this hoopla because returning nothing signals EOF.
         We keep reading chunks until real EOF or we get at least one part.
         """
         r = []
-        while not r and not self.eof:
-            chunk = self.source.read(self.chunk_size)
-            if chunk:
-                self.chunk_buffer += chunk
-                while self.on in self.chunk_buffer:
-                    out, self.chunk_buffer = self.chunk_buffer.split(self.on, 1)
-                    r.append(out)
-            else:
-                r.append(self.chunk_buffer)
-                self.chunk_buffer = b''
-                self.eof = True
+        self.buffer += chunk
+        while self.on in self.buffer:
+            out, self.buffer = self.buffer.split(self.on, 1)
+            r.append(out)
         return r
 
+    def close(self):
+        return [self.buffer]
 
-Split = gen_fn(SplitPipe)
+
+Split = MakePipe(SplitTransformer)
 
 
-class JoinedPipe(PipeMixin):
+class JoinedTransformer(object):
     """
-    JoinedPipe does single level flattening of streams.
+    JoinedTransformer does single level flattening of streams.
     """
-    def __init__(self, source, chunk_size=2 ** 16, by=b""):
-        self.source = source
-        self.chunk_size = chunk_size
+    def __init__(self, by=b""):
         self.by = by
-        self.buffer = b''
-        self.eof = False
+        self.first = True
 
-    def _chunk(self):
-        return self.by.join(self.source.read(self.chunk_size))
+    def transform(self, chunk):
+        if self.first:
+            return self.by.join(chunk)
+        else:
+            return self.by + self.by.join(chunk)
 
 
-Joined = gen_fn(JoinedPipe)
+Joined = MakePipe(JoinedTransformer)
 
 
-class JSONParserPipe(PipeMixin):
+class JSONParserTransform(object):
     """
     JSONParserSource is not very smart. It expects a stream of complete raw
     JSON byte strings and works well with Delimiter for source files with one
     JSON object per line.
     """
-    def __init__(self, source, chunk_size=2 ** 8, encoding='utf-8'):
-        self.source = source
-        self.chunk_size = chunk_size
+    def __init__(self, encoding='utf-8'):
         self.encoding = encoding
-        self.buffer = []
-        self.eof = False
 
-    def _chunk(self):
-        raws = filter(None, self.source.read(self.chunk_size))
+    def transform(self, chunk):
+        raws = filter(None, chunk)
         return [json.loads(raw.decode(self.encoding)) for raw in raws]
 
 
-JSONParser = gen_fn(JSONParserPipe)
+JSONParser = MakePipe(JSONParserTransform)
 
 
-class JSONSerializerPipe(PipeMixin):
+class JSONSerializerTransform(object):
     """
     JSONSerializer takes an object stream and serializes it to json byte strings.
     """
 
-    def __init__(self, source, chunk_size=2 * 8, delimiter=u"\n", encoding="utf-8", **kwargs):
-        self.source = source
+    def __init__(self, delimiter=u"\n", encoding="utf-8", **kwargs):
         self.delimiter = delimiter
-        self.json_kwargs = kwargs
         self.encoding = encoding
-        self.chunk_size = chunk_size
-        self.buffer = []
-        self.eof = False
+        self.json_kwargs = kwargs
 
-    def _chunk(self):
-        objs = self.source.read(self.chunk_size)
+    def transform(self, chunk):
         r = []
-        for obj in objs:
+        for obj in chunk:
             line = json.dumps(obj, **self.json_kwargs)
             raw = line.encode(self.encoding)
             r.append(raw)
         return r
 
 
-JSONSerializer = gen_fn(JSONSerializerPipe)
+JSONSerializer = MakePipe(JSONSerializerTransform)

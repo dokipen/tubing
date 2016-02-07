@@ -17,8 +17,6 @@ expected0_path = os.path.join(os.path.dirname(__file__), 'expected0.gz')
 logger = logging.getLogger("tubing.test_pipe")
 
 
-
-
 class PipeTestCase(unittest.TestCase):
 
     def testPipe(self):
@@ -38,20 +36,23 @@ class PipeTestCase(unittest.TestCase):
 
 
     def testFailingSink(self):
-        _abort = False
-        _done = False
+        results = dict(
+            abort=False,
+            done=False,
+        )
 
         class FailSink(object):
             def write(self, _):
                 raise ValueError("Meant to fail")
 
             def done(self):
-                _done = True
+                results['done'] = True
 
             def abort(self):
-                _abort = True
+                logger.debug("IN ABORT")
+                results['abort'] = True
 
-        Fail = sinks.gen_fn(FailSink)
+        Fail = sinks.MakeSink(FailSink)
 
         try:
             sources.Objects(SOURCE_DATA) | Fail()
@@ -59,5 +60,5 @@ class PipeTestCase(unittest.TestCase):
         except ValueError:
             pass
 
-        #self.assert_(sink._abort)
-        self.assert_(not _done)
+        self.assert_(results['abort'])
+        self.assert_(not results['done'])
