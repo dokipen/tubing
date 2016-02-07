@@ -1,109 +1,39 @@
 from __future__ import print_function
 """
-Tubing sources are defined here. Here's an example of a gziped s3 document with
-one JSON object per line::
-
-    bucket = 'mybucket'
-    key = 'path/to/myfile.gz'
-    source = JSONParser(LineReaderSource(ZlibSource(S3Source(bucket, key))))
-
-    for obj in iter(source.read, ''):
-        # do something with obj dict
+Tubing sources are defined here.
 """
-
-import json
 import logging
-import zlib
-import gzip
+import io
 
 
 logger = logging.getLogger('tubing.sources')
 
 
-class ZlibSource(object):
+class Objects(object):
     """
-    ZlibSource unzips a gzipped source stream.
+    Outputs a list of objects.
     """
-    def __init__(self, source):
-        self.source = source
-        self.dec = zlib.decompressobj(32 + zlib.MAX_WBITS)
+    def __init__(self, objs):
+        self.objs = objs
 
     def read(self, amt=None):
-        chunk = self.source.read(amt)
-        return self.dec.decompress(chunk)
+        r, self.objs = self.objs[:amt], self.objs[amt or len(self.objs):]
+        logger.debug("Returning {}".format(r))
+        return r
+
+    def __or__(self, pipe):
+        return pipe(self)
 
 
-class LineReaderSource(object):
-    """
-    LineReaderSource allow readline on a source stream.
-    """
-    def __init__(self, source, chunksize=4096):
-        self.source = source
-        self.chunksize = chunksize
-        self.buffer = []
-        self.eof = False
+class BytesIO(object):
+    def __init__(self, buf=None):
+        self.buf = buf or io.BytesIO()
 
     def read(self, amt=None):
-        response = []
-        for _ in range(0, amt or 1):
-            l = self.readline()
-            if l:
-                response.append(l)
-            if self.eof:
-                break
-        return response
+        if not amt:
+            amt = -1
+        r, self.objs = self.objs[:amt], self.objs[amt:]
+        return self.objs[:amt]
 
-    def readline(self):
-        """
-        Read a single line.
-        """
-        if self.eof:
-            return None
-
-        output = []
-        newbuffer = []
-        state = "outputting"
-        for chunk in self.buffer:
-            if b"\n" in chunk:
-                out, buf = chunk.split(b"\n", 1)
-                output.append(out)
-                newbuffer.append(buf)
-                state = "buffering"
-            elif state == "outputting":
-                output.append(chunk)
-
-        self.buffer = newbuffer
-        while state == "outputting":
-            chunk = self.source.read(self.chunksize)
-            if not chunk:
-                # EOF
-                self.eof = True
-                return b''.join(output) or None
-            if b"\n" in chunk:
-                out, buf = chunk.split(b"\n", 1)
-                output.append(out)
-                self.buffer.append(buf)
-                state = "buffering"
-            else:
-                output.append(chunk)
-
-        return b''.join(output) or None
-
-
-class JSONParserSource(object):
-    """
-    JSONParserSource is not very smart. It expects one raw JSON object per read
-    and works well with LineReaderSource for source files with one JSON object
-    per line.
-    """
-    def __init__(self, source, encoding='utf-8'):
-        self.source = source
-        self.encoding = encoding
-
-    def read(self, amt=1):
-        response = []
-        for line in self.source.read(amt):
-            if line:
-                j = line.decode(self.encoding).strip()
-                response.append(json.loads(j))
-        return response
+    def __or__(self, pipe):
+        pipe(self)
