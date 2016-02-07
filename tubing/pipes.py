@@ -41,9 +41,6 @@ class PipeMixin(object):
         r, self.buffer = self.buffer[:amt], self.buffer[amt or len(self.buffer):]
         return r
 
-    def _chunk(self):
-        return self.source.read(self.chunk_size)
-
     def _close(self):
         pass
 

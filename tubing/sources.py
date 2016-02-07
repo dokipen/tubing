@@ -23,17 +23,3 @@ class Objects(object):
 
     def __or__(self, pipe):
         return pipe(self)
-
-
-class BytesIO(object):
-    def __init__(self, buf=None):
-        self.buf = buf or io.BytesIO()
-
-    def read(self, amt=None):
-        if not amt:
-            amt = -1
-        r, self.objs = self.objs[:amt], self.objs[amt:]
-        return self.objs[:amt]
-
-    def __or__(self, pipe):
-        pipe(self)
