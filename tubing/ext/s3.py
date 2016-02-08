@@ -7,12 +7,15 @@ import boto3
 import logging
 from tubing import sources, pipes, sinks
 
-
 logger = logging.getLogger('tubing.ext.s3')
 
 
-class S3Reader(object):
-    def __init__(self, bucket, key): # pragma: no cover
+class S3Reader(object):  # pragma: no cover
+    """
+    Read file from S3. Expects AWS environmental variables to be set.
+    """
+
+    def __init__(self, bucket, key):  # pragma: no cover
         """
         Create an S3 Source stream.
         """
@@ -26,10 +29,11 @@ class S3Reader(object):
 S3Source = sources.MakeSource(S3Reader)
 
 
-class S3SinkWriter(object): # pragma: no cover
+class S3SinkWriter(object):  # pragma: no cover
     """
-    Send MediaDocs to S3. Expects AWS environmental variables to be set.
+    Send file to S3. Expects AWS environmental variables to be set.
     """
+
     def __init__(self, bucket, key):
         """
         Initiate the multipart upload.
@@ -48,10 +52,12 @@ class S3SinkWriter(object): # pragma: no cover
         """
         Keep track of all parts so we can finalize multipart upload.
         """
-        self.part_info['Parts'].append(dict(
-            PartNumber=part_number,
-            ETag=part['ETag'],
-        ))
+        self.part_info['Parts'].append(
+            dict(
+                PartNumber=part_number,
+                ETag=part['ETag'],
+            )
+        )
 
     def write(self, chunk):
         """
@@ -68,7 +74,7 @@ class S3SinkWriter(object): # pragma: no cover
         self.track_part(self.part_number, part)
         self.part_number += 1
 
-    def done(self):
+    def close(self):
         """
         Finalize upload.
         """

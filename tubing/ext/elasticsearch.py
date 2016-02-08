@@ -7,16 +7,23 @@ import requests
 import logging
 from tubing import sinks, pipes
 
-
 logger = logging.getLogger('tubing.ext.elasticsearch')
 
 
 class DocUpdate(object):
     """
-    DocUpdate is an ElasticSearch document update object. It is meant to be used with
-    BulkBatcher and returns an action and update.
+    DocUpdate is an ElasticSearch document update object. It is meant to be
+    used with BulkBatcher and returns an action and update.
     """
-    def __init__(self, esid, doc, doc_type, parent_esid=None, doc_as_upsert=True):
+
+    def __init__(
+        self,
+        esid,
+        doc,
+        doc_type,
+        parent_esid=None,
+        doc_as_upsert=True
+    ):
         """
         esid is an elasticsearch _id
         parent_esid is the elasticsearch _id of parent if parent exists
@@ -29,33 +36,30 @@ class DocUpdate(object):
         self.doc_type = doc_type
 
     def action(self, encoding):
-        action = dict(
-            update=dict(
-                 _id=self.esid,
-                 _type=self.doc_type,
-            ),
-        )
+        action = dict(update=dict(_id=self.esid, _type=self.doc_type,),)
         if self.parent_esid:
             action['update']['parent'] = self.parent_esid
         return json.dumps(action).encode(encoding)
 
     def update(self, encoding):
-        return json.dumps(dict(
-            doc_as_upsert=self.doc_as_upsert,
-            doc=self.doc,
-        )).encode(encoding)
+        return json.dumps(
+            dict(
+                doc_as_upsert=self.doc_as_upsert,
+                doc=self.doc,
+            )
+        ).encode(encoding)
 
     def serialize(self, encoding):
         return self.action(encoding) + b"\n" + self.update(encoding) + b"\n"
 
 
-
 class BulkBatcherTransform(object):
     """
-    Creates bulk updates for Elastic Search.  This is an object stream handler
-    and expects DocUpdate objects.
+    BulkBatcherTransform creates bulk updates for DocUpdates.  This is an
+    object stream handler and expects DocUpdate objects.
     """
-    def __init__(self, bulk_batch_size=2 ** 10, encoding='utf-8'):
+
+    def __init__(self, bulk_batch_size=2**10, encoding='utf-8'):
         self.batch = []
         self.batch_size = bulk_batch_size
         self.encoding = encoding
@@ -79,14 +83,20 @@ BulkBatcher = pipes.MakePipe(BulkBatcherTransform)
 
 
 class ElasticSearchError(Exception):
+    """
+    ElasticSearchError message is the text response from the elasticsearch
+    server.
+    """
     pass
 
 
-class BulkSinkWriter(object): # pragma: no cover
+class BulkSinkWriter(object):  # pragma: no cover
     """
-    Elastic search bulk writer.
+    BulkSinkWriter writes bulk updates to Elastic Search. If username or
+    password is None, then auth will be skipped.
     """
-    def __init__(self, base, index_name, username, password):
+
+    def __init__(self, base, index_name, username=None, password=None):
         self.base = base
         self.index_name = index_name
         self.username = username
