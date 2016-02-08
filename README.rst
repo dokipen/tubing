@@ -75,7 +75,9 @@ Catalog
 Sources
 ~~~~~~~
 
-- `sources.Objects`, takes a `list` of python objects.
++---------+----------------------------------+
+|`Objects`| takes a `list` of python objects.|
++---------+----------------------------------+
 
 Pipes
 ~~~~~
@@ -88,8 +90,11 @@ Pipes
 | `JSONParser`     | parses a byte string stream of raw JSON objects.     |
 +------------------+------------------------------------------------------+
 | `JSONSerializer` | serializes an object stream using `json.dumps`.      |
++------------------+------------------------------------------------------+
 | `Split`          | splits a stream that supports the `split` method.    |
++------------------+------------------------------------------------------+
 | `Joined`         | joins a stream of the same type as the `by` argument.|
++------------------+------------------------------------------------------+
 | `Debugger`       | proxies stream, writing each chunk to the            |
 |                  | `tubing.pipes` debugger with level DEBUG.            |
 +------------------+------------------------------------------------------+
@@ -97,9 +102,13 @@ Pipes
 Sinks
 ~~~~~
 
-- `sinks.Bytes`, saves each chunk self.results.
-- `sinks.File`, writes each chunk to a file.
-- `sinks.Debugger`, writes each chunk to the tubing.pipes debugger with level DEBUG.
++----------+-----------------------------------------------------------------+
+|`Bytes`   | saves each chunk self.results.                                  |
++----------+-----------------------------------------------------------------+
+|`File`    | writes each chunk to a file.                                    |
++----------+-----------------------------------------------------------------+
+|`Debugger`| writes each chunk to the tubing.pipes debugger with level DEBUG.|
++----------+-----------------------------------------------------------------+
 
 Sources
 -------
