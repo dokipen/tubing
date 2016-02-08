@@ -30,7 +30,7 @@ class S3Sink(object): # pragma: no cover
         self.s3 = boto3.client('s3')
         self.bucket = bucket
         self.key = key
-        logger.debug("Creating upload for {} {}".format(bucket, key))
+        logger.debug("Creating upload for %s %s" % (bucket, key))
         upload = self.s3.create_multipart_upload(Bucket=bucket, Key=key)
         self.upload_id = upload["UploadId"]
         # start with 1
@@ -50,7 +50,7 @@ class S3Sink(object): # pragma: no cover
         """
         Upload a part.
         """
-        logger.debug("Posting {}".format(self.part_number))
+        logger.debug("Posting " + self.part_number)
         part = self.s3.upload_part(
             Bucket=self.bucket,
             Key=self.key,

@@ -84,14 +84,14 @@ class BulkSink(sinks.BaseSink): # pragma: no cover
         self.password = password
 
     def _url(self):
-        return "{}/{}/_bulk".format(self.base, self.index_name)
+        return "%s/%s/_bulk" % (self.base, self.index_name)
 
     def _auth(self):
         if self.username or self.password:
             return self.username, self.password
 
     def write(self, chunk):
-        logger.debug("POSTING: {}".format(chunk))
+        logger.debug("POSTING: " + chunk)
         resp = requests.post(self._url(), data=chunk, auth=self._auth())
         logger.debug(resp.text)
         resp_obj = json.loads(resp.text)
