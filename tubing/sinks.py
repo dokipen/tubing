@@ -26,7 +26,13 @@ class MakeSink(object):
         self.sink_cls = sink_cls
         self.default_chunk_size = default_chunk_size
 
-    def __call__(self, chunk_size=None, *args, **kwargs):
+    def __call__(self, *args, **kwargs):
+        if kwargs.get('chunk_size'):
+            chunk_size = kwargs['chunk_size']
+            del kwargs['chunk_size']
+        else:
+            chunk_size = None
+
         chunk_size = chunk_size or self.default_chunk_size
 
         def fn(source):
@@ -78,3 +84,21 @@ class BytesWriter(io.BytesIO):
 
 
 Bytes = MakeSink(BytesWriter, 2**16)
+
+
+class FileWriter(object):
+    def __init__(self, *args, **kwargs):
+        self.f = open(*args, **kwargs)
+
+    def write(self, chunk):
+        self.f.write(chunk)
+
+    def close(self):
+        self.f.close()
+
+    def abort(self):
+        # TODO: probably delete the file
+        self.f.close()
+
+
+File = MakeSink(FileWriter)
