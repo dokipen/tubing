@@ -38,6 +38,7 @@ class MakeSink(object):
         def fn(source):
             try:
                 sink = self.sink_cls(*args, **kwargs)
+                logger.debug("reading %s" % (source))
                 chunk, eof = source.read(chunk_size)
                 sink.write(chunk)
                 while not eof:
@@ -102,3 +103,17 @@ class FileWriter(object):
 
 
 File = MakeSink(FileWriter)
+
+
+class DebugPrinter(object):
+    def write(self, chunk):
+        logger.debug(chunk)
+
+    def close(self):
+        logger.debug("CLOSED")
+
+    def abort(self):
+        logger.debug("ABORTED")
+
+
+Debugger = MakeSink(DebugPrinter)

@@ -114,11 +114,10 @@ class Pipe(object):
                 if self.eof and hasattr(self.transformer, 'close'):
                     self.append(self.transformer.close())
 
-            if self.eof:
-                if amt and len(self.buffer) > amt:
-                    return self._shift_buffer(amt), False
-                else:
+            if self.eof and (not amt or len(self.buffer) <= amt):
                     return self._shift_buffer(amt), True
+
+            return self._shift_buffer(amt), False
         except:
             logger.exception("Pipe failed")
             hasattr(self.transformer, 'abort') and self.transformer.abort()
@@ -134,7 +133,7 @@ class GunzipTransformer(object):
         self.dec = zlib.decompressobj(32 + zlib.MAX_WBITS)
 
     def transform(self, chunk):
-        return self.dec.decompress(chunk)
+        return self.dec.decompress(chunk) or b''
 
 
 Gunzip = MakePipe(GunzipTransformer)
@@ -252,3 +251,13 @@ class JSONSerializerTransformer(object):
 
 
 JSONSerializer = MakePipe(JSONSerializerTransformer)
+
+
+# Where should this all purpose thing go? Here I guess.
+class DebugPrinter(object):
+    def transform(self, chunk):
+        logger.debug(chunk)
+        return chunk
+
+
+Debugger = MakePipe(DebugPrinter)

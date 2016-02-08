@@ -24,7 +24,7 @@ class S3Reader(object):  # pragma: no cover
 
     def read(self, amt):
         r = self.response['Body'].read(amt)
-        return r, len(r) == 0
+        return r or b'', not r
 
 
 S3Source = sources.MakeSource(S3Reader)
