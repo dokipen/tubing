@@ -1,6 +1,12 @@
 from __future__ import print_function
 """
-Tubing sinks are targets for streams of data.
+Tubing sinks are targets for streams of data. To make your own sink, define a Writer with a write(chunk) and optional close() and abort() functions and pass it to MakeSink. if present, close() will be called on the upstream EOF and abort() will be called on any exception in the pipeline. Here's an example::
+
+    class MyWriter(object):
+        def write(self, chunk):
+            print chunk
+
+    MySink = MakeSink(MyWriter)
 """
 import logging
 import io
@@ -9,8 +15,14 @@ logger = logging.getLogger('tubing.sinks')
 
 
 class MakeSink(object):
+    """
+    MakeSink returns a factory that wraps a Writer and executes the pipeline.
+    default_chunk_size should be set according to the type of stream that the
+    sink works on. Objects are heavier than byte streams, so should have a
+    lower default_chunk_size.
+    """
 
-    def __init__(self, sink_cls, default_chunk_size=None):
+    def __init__(self, sink_cls, default_chunk_size=2**16):
         self.sink_cls = sink_cls
         self.default_chunk_size = default_chunk_size
 
@@ -36,6 +48,9 @@ class MakeSink(object):
 
 
 class ObjectsSink(list):
+    """
+    Writes an object stream to a list.
+    """
 
     def write(self, objs):
         self.extend(objs)
@@ -44,18 +59,22 @@ class ObjectsSink(list):
 Objects = MakeSink(ObjectsSink, 2**4)
 
 
-class BytesIOSink(io.BytesIO):
+class BytesWriter(io.BytesIO):
+    """
+    BytesWriter collects a stream of bytes and saves it to the result member
+    on close().
+    """
 
     def __init__(self, *args, **kwargs):
         self.result = None
-        super(BytesIOSink, self).__init__(*args, **kwargs)
+        super(BytesWriter, self).__init__(*args, **kwargs)
 
     def close(self):
         self.result = self.getvalue()
-        super(BytesIOSink, self).close()
+        super(BytesWriter, self).close()
 
     def abort(self):
-        super(BytesIOSink, self).close()
+        super(BytesWriter, self).close()
 
 
-BytesIO = MakeSink(BytesIOSink)
+Bytes = MakeSink(BytesWriter, 2**16)

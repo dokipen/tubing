@@ -1,5 +1,4 @@
 import tubing
-import sys
 # For python 2.6 backports
 import unittest2 as unittest
 

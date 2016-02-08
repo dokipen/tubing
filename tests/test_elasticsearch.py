@@ -1,7 +1,7 @@
 import json
 import unittest2 as unittest
-from tubing.ext import elasticsearch, s3
-from tubing import sinks, sources, pipes
+from tubing.ext import elasticsearch
+from tubing import sinks, sources
 
 EXPECTED = [
     {
@@ -45,7 +45,7 @@ class ElasticSearchTestCase(unittest.TestCase):
 
         sink = sources.Objects(payload) \
              | elasticsearch.BulkBatcher() \
-             | sinks.BytesIO()
+             | sinks.Bytes()
 
         f = []
         for line in sink.result.split(b'\n'):
@@ -66,6 +66,6 @@ class ElasticSearchTestCase(unittest.TestCase):
 
         sink = sources.Objects([make_du(i) for i in range(0,150)]) \
              | elasticsearch.BulkBatcher(bulk_batch_size=50) \
-             | sinks.BytesIO()
+             | sinks.Bytes()
 
         self.assertEqual(301, len(sink.result.split(b"\n")))

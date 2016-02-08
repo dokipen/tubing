@@ -1,7 +1,5 @@
 import logging
-import os.path
 import unittest2 as unittest
-from io import BytesIO
 from tubing import sinks, sources, pipes
 
 SOURCE_DATA = [

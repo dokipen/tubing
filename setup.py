@@ -70,6 +70,8 @@ setup(
     ),
     extras_require={
         "build": [
+            "yapf",
+            "pyflakes",
             "nose",
             "unittest2",
             "coveralls",

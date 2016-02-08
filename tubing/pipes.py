@@ -155,7 +155,7 @@ class GzipTransformer(object):
     def transform(self, chunk):
         self.zipfile.write(chunk)
         r = self.buffer
-        self.buffer = r''
+        self.buffer = b''
         return r
 
     def close(self):

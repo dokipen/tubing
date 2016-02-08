@@ -5,7 +5,7 @@ S3 Tubing extension.
 
 import boto3
 import logging
-from tubing import sources, pipes, sinks
+from tubing import sources, sinks
 
 logger = logging.getLogger('tubing.ext.s3')
 
