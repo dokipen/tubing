@@ -82,8 +82,11 @@ Pipes
 
 +------------------+------------------------------------------------------+
 | `Gunzip`         | unzips a binary stream.                              |
++------------------+------------------------------------------------------+
 | `Gzip`           | zips a binary stream.                                |
++------------------+------------------------------------------------------+
 | `JSONParser`     | parses a byte string stream of raw JSON objects.     |
++------------------+------------------------------------------------------+
 | `JSONSerializer` | serializes an object stream using `json.dumps`.      |
 | `Split`          | splits a stream that supports the `split` method.    |
 | `Joined`         | joins a stream of the same type as the `by` argument.|
