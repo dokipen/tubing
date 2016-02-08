@@ -33,7 +33,9 @@ are three sections below for adding sources, pipes and sink. If you do make
 some additions, think about committing them back upstream. We'd love to have
 a full suite of tools.
 
-Now, witness the full power of this fully operational I/O library::
+Now, witness the full power of this fully operational I/O library.
+
+.. code-block:: python
 
     from tubing import sources, pipes, sinks
 
@@ -55,7 +57,9 @@ Now, witness the full power of this fully operational I/O library::
          | pipes.Gzip() \
          | sinks.File("output.gz", "wb")
 
-Then in our old friend bash::
+Then in our old friend bash.
+
+.. code-block:: bash
 
     $ zcat output.gz
     {"alignment": "evil", "birthdate": "08/03/1977", "name": "Bob Corsaro"}
