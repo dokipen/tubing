@@ -9,7 +9,7 @@ from codecs import open
 from datetime import datetime
 from setuptools import setup, find_packages
 
-minor_version = "0.0.1"
+minor_version = "0.0.2"
 
 
 if sys.argv[-1] == "publish":
