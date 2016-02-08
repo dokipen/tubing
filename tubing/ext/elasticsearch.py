@@ -10,7 +10,7 @@ from tubing import sinks, pipes
 logger = logging.getLogger('tubing.ext.elasticsearch')
 
 
-class DocUpdate(object):
+class DocUpdate(object): # pragma: no cover
     """
     DocUpdate is an ElasticSearch document update object. It is meant to be
     used with BulkBatcher and returns an action and update.
