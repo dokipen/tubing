@@ -72,20 +72,28 @@ thinking?
 Catalog
 -------
 
-- sources
-  - `sources.Objects`, takes a `list` of python objects.
-- pipes
-  - `pipes.Gunzip`, unzips a binary stream.
-  - `pipes.Gzip`, zips a binary stream.
-  - `pipes.JSONParser`, parses a byte string stream of raw JSON objects.
-  - `pipes.JSONSerializer`, serializes an object stream using `json.dumps`.
-  - `pipes.Split`, splits a stream that supports the `split` method.
-  - `pipes.Joined`, joins a stream of the same type as the `by` argument.
-  - `pipes.Debugger`, proxies stream, writing each chunk to the tubing.pipes debugger with level DEBUG.
-- sinks
-  - `sinks.Bytes`, saves each chunk self.results.
-  - `sinks.File`, writes each chunk to a file.
-  - `sinks.Debugger`, writes each chunk to the tubing.pipes debugger with level DEBUG.
+Sources
+~~~~~~~
+
+- `sources.Objects`, takes a `list` of python objects.
+
+Pipes
+~~~~~
+
+- `pipes.Gunzip`, unzips a binary stream.
+- `pipes.Gzip`, zips a binary stream.
+- `pipes.JSONParser`, parses a byte string stream of raw JSON objects.
+- `pipes.JSONSerializer`, serializes an object stream using `json.dumps`.
+- `pipes.Split`, splits a stream that supports the `split` method.
+- `pipes.Joined`, joins a stream of the same type as the `by` argument.
+- `pipes.Debugger`, proxies stream, writing each chunk to the tubing.pipes debugger with level DEBUG.
+
+Sinks
+~~~~~
+
+- `sinks.Bytes`, saves each chunk self.results.
+- `sinks.File`, writes each chunk to a file.
+- `sinks.Debugger`, writes each chunk to the tubing.pipes debugger with level DEBUG.
 
 Sources
 -------
