@@ -66,6 +66,11 @@ Then in our old friend bash::
 We need to seriously think about renaming pipes to tubes.. man, what was I
 thinking?
 
+Catalog
+-------
+
+# TODO: List all our tools here. For now, look through the code, it's not big at all.
+
 Sources
 -------
 
