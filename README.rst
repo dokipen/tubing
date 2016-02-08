@@ -129,7 +129,7 @@ Next give Optimus Prime a hug::
 
     AllMixedUp = pipes.MakePipe(OptimusPrime)
 
-Ready to mix up some data?
+Ready to mix up some data?::
 
     from __future__ import print_function
 
