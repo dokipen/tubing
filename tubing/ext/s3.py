@@ -23,7 +23,8 @@ class S3Reader(object):  # pragma: no cover
         self.response = s3.get_object(Bucket=bucket, Key=key)
 
     def read(self, amt):
-        return self.response['Body'].read(amt)
+        r = self.response['Body'].read(amt)
+        return r, len(r) == 0
 
 
 S3Source = sources.MakeSource(S3Reader)
