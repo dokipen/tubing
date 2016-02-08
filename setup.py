@@ -73,6 +73,8 @@ setup(
             "nose",
             "unittest2",
             "coveralls",
+            "requests",
+            "boto3",
         ],
         "s3": [
             "boto3",
