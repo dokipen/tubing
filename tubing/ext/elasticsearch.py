@@ -85,12 +85,13 @@ class BulkSinkWriter(object):  # pragma: no cover
         data = b''
         for update in chunk:
             data += update.serialize(self.encoding)
-        logger.debug("POSTING: " + data)
-        resp = requests.post(self._url(), data=data, auth=self._auth())
-        logger.debug(resp.text)
-        resp_obj = json.loads(resp.text)
-        if resp_obj['errors']:
-            raise ElasticSearchError(resp.text)
+        if data:
+            logger.debug("POSTING: " + data)
+            resp = requests.post(self._url(), data=data, auth=self._auth())
+            logger.debug(resp.text)
+            resp_obj = json.loads(resp.text)
+            if resp_obj['errors']:
+                raise ElasticSearchError(resp.text)
 
 
 BulkSink = sinks.MakeSink(BulkSinkWriter, default_chunk_size=2 ** 10)
