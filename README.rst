@@ -75,40 +75,56 @@ Catalog
 Sources
 ~~~~~~~
 
-+---------+----------------------------------+
-|`Objects`| takes a `list` of python objects.|
-+---------+----------------------------------+
++---------+------------------------------------+
+|`Objects`|Takes a `list` of python objects.   |
++---------+------------------------------------+
+|`File`   |Creates a stream from a file.       |
++---------+------------------------------------+
+|`Bytes`  |Creates a stream from a byte string.|
++---------+------------------------------------+
 
 Pipes
 ~~~~~
 
-+------------------+------------------------------------------------------+
-| `Gunzip`         | unzips a binary stream.                              |
-+------------------+------------------------------------------------------+
-| `Gzip`           | zips a binary stream.                                |
-+------------------+------------------------------------------------------+
-| `JSONParser`     | parses a byte string stream of raw JSON objects.     |
-+------------------+------------------------------------------------------+
-| `JSONSerializer` | serializes an object stream using `json.dumps`.      |
-+------------------+------------------------------------------------------+
-| `Split`          | splits a stream that supports the `split` method.    |
-+------------------+------------------------------------------------------+
-| `Joined`         | joins a stream of the same type as the `by` argument.|
-+------------------+------------------------------------------------------+
-| `Debugger`       | proxies stream, writing each chunk to the            |
-|                  | `tubing.pipes` debugger with level DEBUG.            |
-+------------------+------------------------------------------------------+
++----------------+-----------------------------------------------------+
+|`Gunzip`        |Unzips a binary stream.                              |
++----------------+-----------------------------------------------------+
+|`Gzip`          |Zips a binary stream.                                |
++----------------+-----------------------------------------------------+
+|`JSONParser`    |Parses a byte string stream of raw JSON objects.     |
++----------------+-----------------------------------------------------+
+|`JSONSerializer`|Serializes an object stream using `json.dumps`.      |
++----------------+-----------------------------------------------------+
+|`Split`         |Splits a stream that supports the `split` method.    |
++----------------+-----------------------------------------------------+
+|`Joined`        |Joins a stream of the same type as the `by` argument.|
++----------------+-----------------------------------------------------+
+|`Debugger`      |Proxies stream, writing each chunk to the            |
+|                |`tubing.pipes` debugger with level DEBUG.            |
++----------------+-----------------------------------------------------+
 
 Sinks
 ~~~~~
 
-+----------+-----------------------------------------------------------------+
-|`Bytes`   | saves each chunk self.results.                                  |
-+----------+-----------------------------------------------------------------+
-|`File`    | writes each chunk to a file.                                    |
-+----------+-----------------------------------------------------------------+
-|`Debugger`| writes each chunk to the tubing.pipes debugger with level DEBUG.|
-+----------+-----------------------------------------------------------------+
++----------+----------------------------------------------------------------+
+|`Bytes`   |Saves each chunk self.results.                                  |
++----------+----------------------------------------------------------------+
+|`File`    |Writes each chunk to a file.                                    |
++----------+----------------------------------------------------------------+
+|`Debugger`|Writes each chunk to the tubing.pipes debugger with level DEBUG.|
++----------+----------------------------------------------------------------+
+
+Extensions
+~~~~~~~~~~
+
++------------------------+-----------------------------------------------+
+|`s3.S3Source`           |Create stream from an S3 object.               |
++------------------------+-----------------------------------------------+
+|`s3.S3Sink`             |Stream data to S3 object.                      |
++------------------------+-----------------------------------------------+
+|`elasticsearch.BulkSink`|Stream `elasticsearch.DocUpdate` objects to the|
+|                        |elasticsearch _bulk endpoint.                  |
++------------------------+-----------------------------------------------+
 
 Sources
 -------
