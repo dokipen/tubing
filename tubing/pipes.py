@@ -69,15 +69,15 @@ class Pipe(object):
     def pipe(self, other):
         return other(self)
 
-    def _read_complete(self, amt):
+    def read_complete(self, amt):
         """
-        _read_complete tells us if the current request is fulfilled. It's fulfilled
+        read_complete tells us if the current request is fulfilled. It's fulfilled
         if we've reached the EOF in the source, or we have $amt parts. If amt is
         None, we should read to the source's EOF.
         """
         return self.eof or amt and self.buffer and len(self.buffer) >= amt
 
-    def _shift_buffer(self, amt):
+    def shift_buffer(self, amt):
         """
         Remove $amt data from the front of the buffer and return it.
         """
@@ -100,12 +100,18 @@ class Pipe(object):
         else:
             self.buffer = chunk
 
+    def buffer_len(self):
+        """
+        buffer_len even if buffer is None.
+        """
+        return self.buffer and len(self.buffer) or 0
+
     def read(self, amt=None):
         """
         This is where the rubber meets the snow.
         """
         try:
-            while not self._read_complete(amt):
+            while not self.read_complete(amt):
                 inchunk, self.eof = self.source.read(self.chunk_size)
                 if inchunk:
                     outchunk = self.transformer.transform(inchunk)
@@ -114,10 +120,11 @@ class Pipe(object):
                 if self.eof and hasattr(self.transformer, 'close'):
                     self.append(self.transformer.close())
 
-            if self.eof and (not amt or len(self.buffer) <= amt):
-                    return self._shift_buffer(amt), True
+            if self.eof and (not amt or self.buffer_len() <= amt):
+                # We've written everything, we're done
+                return self.shift_buffer(amt), True
 
-            return self._shift_buffer(amt), False
+            return self.shift_buffer(amt), False
         except:
             logger.exception("Pipe failed")
             hasattr(self.transformer, 'abort') and self.transformer.abort()
