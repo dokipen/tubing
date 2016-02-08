@@ -34,7 +34,7 @@ some additions, think about committing them back upstream. We'd love to have
 a full suite of tools.
 
 Now for an example to show the true power of this fully operational I/O
-library.
+library::
 
     from tubing import sources, pipes, sinks
 
