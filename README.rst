@@ -80,13 +80,16 @@ Sources
 Pipes
 ~~~~~
 
-- `pipes.Gunzip`, unzips a binary stream.
-- `pipes.Gzip`, zips a binary stream.
-- `pipes.JSONParser`, parses a byte string stream of raw JSON objects.
-- `pipes.JSONSerializer`, serializes an object stream using `json.dumps`.
-- `pipes.Split`, splits a stream that supports the `split` method.
-- `pipes.Joined`, joins a stream of the same type as the `by` argument.
-- `pipes.Debugger`, proxies stream, writing each chunk to the tubing.pipes debugger with level DEBUG.
++------------------+------------------------------------------------------+
+| `Gunzip`         | unzips a binary stream.                              |
+| `Gzip`           | zips a binary stream.                                |
+| `JSONParser`     | parses a byte string stream of raw JSON objects.     |
+| `JSONSerializer` | serializes an object stream using `json.dumps`.      |
+| `Split`          | splits a stream that supports the `split` method.    |
+| `Joined`         | joins a stream of the same type as the `by` argument.|
+| `Debugger`       | proxies stream, writing each chunk to the            |
+|                  | `tubing.pipes` debugger with level DEBUG.            |
++------------------+------------------------------------------------------+
 
 Sinks
 ~~~~~
