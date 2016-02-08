@@ -68,12 +68,27 @@ thinking?
 Catalog
 -------
 
-# TODO: List all our tools here. For now, look through the code, it's not big at all.
+- sources
+  - `sources.Objects`, takes a `list` of python objects.
+- pipes
+  - `pipes.Gunzip`, unzips a binary stream.
+  - `pipes.Gzip`, zips a binary stream.
+  - `pipes.JSONParser`, parses a byte string stream of raw JSON objects.
+  - `pipes.JSONSerializer`, serializes an object stream using `json.dumps`.
+  - `pipes.Split`, splits a stream that supports the `split` method.
+  - `pipes.Joined`, joins a stream of the same type as the `by` argument.
+  - `pipes.Debugger`, proxies stream, writing each chunk to the tubing.pipes debugger with level DEBUG.
+- sinks
+  - `sinks.Bytes`, saves each chunk self.results.
+  - `sinks.File`, writes each chunk to a file.
+  - `sinks.Debugger`, writes each chunk to the tubing.pipes debugger with level DEBUG.
 
 Sources
 -------
 
-To make your own source, create a Reader class with the following interface::
+To make your own source, create a Reader class with the following interface.
+
+.. code-block:: python
 
     class MyReader(object):
         """
@@ -95,13 +110,17 @@ To make your own source, create a Reader class with the following interface::
 
 The important thing to remember is that your read function should return an
 iterable of units of data, not a single piece of data. Then wrap your reader in
-the loving embrace of MakeSource::
+the loving embrace of MakeSource.
+
+.. code-block:: python
 
     from tubing import sources
 
     MySource = sources.MakeSource(MyReader)
 
-Now it can be used in a pipeline!::
+Now it can be used in a pipeline!
+
+.. code-block:: python
 
     from __future__ import print_function
 
@@ -116,7 +135,9 @@ Now it can be used in a pipeline!::
 Pipes
 -----
 
-Making your own pipe is a lot more fun, trust me. First make a Transformer::
+Making your own pipe is a lot more fun, trust me. First make a Transformer.
+
+.. code-block:: python
 
     class OptimusPrime(object):
         def transform(self, chunk):
@@ -127,13 +148,17 @@ working with. In Transformers, you don't need to worry about buffer size or
 closing or exception, just transform an iterable to another iterable. There are
 lots of examples in pipes.py.
 
-Next give Optimus Prime a hug::
+Next give Optimus Prime a hug.
+
+.. code-block:: python
 
     from tubing import pipes
 
     AllMixedUp = pipes.MakePipe(OptimusPrime)
 
-Ready to mix up some data?::
+Ready to mix up some data?
+
+.. code-block:: python
 
     from __future__ import print_function
 
@@ -154,7 +179,9 @@ Sinks
 
 Really getting tired of making documentation... Maybe I'll finish later. I have real work to do.
 
-Well.. I'm this far, let's just push through::
+Well.. I'm this far, let's just push through.
+
+.. code-block:: python
 
     from __future__ import print_function
     from tubing import sources, pipes, sinks
@@ -193,5 +220,3 @@ Well.. I'm this far, let's just push through::
     #{"number": 9}
     #{"number": 8}
     #That's all folks!
-
-
