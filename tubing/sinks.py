@@ -159,13 +159,14 @@ class HTTPPost(object):
     """
     Expects a stream of byte strings.
     """
-    def __init__(self, url, username=None, password=None, chunk_size=2 ** 4, chunks_per_post=2 ** 10):
+    def __init__(self, url, username=None, password=None, chunk_size=2 ** 4, chunks_per_post=2 ** 10, response_handler=lambda _: None):
         self.url = url
         self.auth = None
         if username and password:
             self.auth = username, password
         self.chunk_size = chunk_size
         self.per_post = chunks_per_post
+        self.response_handler = response_handler
 
     def __call__(self, source):
         posts = GeneratorGeneratorSink(
@@ -175,4 +176,4 @@ class HTTPPost(object):
             source=source
         )
         for post in posts:
-            resp = requests.post(self.url, data=post, auth=self.auth)
+            self.response_handler(requests.post(self.url, data=post, auth=self.auth))

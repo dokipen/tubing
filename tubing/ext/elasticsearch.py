@@ -78,15 +78,30 @@ class BulkUpdateTransformer(object):
 
 PrepareBulkUpdate = pipes.MakePipe(BulkUpdateTransformer, default_chunk_size=2 ** 10)
 
-def BulkUpdate(base_url, index, username=None, password=None, chunk_size=50, chunks_per_post=20):
+def BulkUpdate(base_url, index, username=None, password=None, chunk_size=50, chunks_per_post=20, fail_on_error=True):
     """
     Docs per post is chunk_size * chunks_per_post.
     """
     url = "%s/%s/_bulk" % (base_url, index)
+    def response_handler(resp):
+        try:
+            try:
+                resp_obj = json.loads(resp.text)
+            except ValueError:
+                raise ElasticSearchError("invalid response: '%s'" % (resp.text))
+
+            if resp_obj['errors']:
+                raise ElasticSearchError("errors in response: '%s'" % (resp.text))
+        except:
+            logger.exception(resp)
+            if fail_on_error:
+                raise
+
     return sinks.HTTPPost(
         url=url,
         username=username,
         password=password,
         chunk_size=chunk_size,
         chunks_per_post=chunks_per_post,
+        response_handler=response_handler,
     )
