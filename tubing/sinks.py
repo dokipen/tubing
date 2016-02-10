@@ -10,6 +10,8 @@ Tubing sinks are targets for streams of data. To make your own sink, define a Wr
 """
 import logging
 import io
+import functools
+import requests
 
 logger = logging.getLogger('tubing.sinks')
 
@@ -52,6 +54,40 @@ class MakeSink(object):
                 raise
 
         return fn
+
+
+def GeneratorSink(chunk_size, source):
+    eof = False
+    while not eof:
+        r, eof = source.read(chunk_size)
+        yield r
+
+
+def Generator(chunk_size=2 ** 10):
+    return functools.partial(GeneratorSink, chunk_size)
+
+
+def GeneratorGeneratorSink(chunk_size, per_gen, flatten, source):
+    d = dict(eof=False)
+    def gen():
+        i = per_gen
+        while not d['eof'] and i:
+            chunk, d['eof'] = source.read(chunk_size)
+            logger.debug(repr(chunk))
+            if flatten:
+                for line in chunk:
+                    yield line
+            else:
+                yield chunk
+            i -= 1
+
+    while not d['eof']:
+        yield gen()
+
+    logger.debug("all done")
+
+def GeneratorGenerator(chunk_size=2 ** 10, per_gen=2 * 4, flatten=False):
+    return functools.partial(GeneratorGeneratorSink, chunk_size, per_gen, flatten)
 
 
 class ObjectsSink(list):
@@ -117,3 +153,26 @@ class DebugPrinter(object):
 
 
 Debugger = MakeSink(DebugPrinter)
+
+
+class HTTPPost(object):
+    """
+    Expects a stream of byte strings.
+    """
+    def __init__(self, url, username=None, password=None, chunk_size=2 ** 4, chunks_per_post=2 ** 10):
+        self.url = url
+        self.auth = None
+        if username and password:
+            self.auth = username, password
+        self.chunk_size = chunk_size
+        self.per_post = chunks_per_post
+
+    def __call__(self, source):
+        posts = GeneratorGeneratorSink(
+            chunk_size=self.chunk_size,
+            per_gen=self.per_post,
+            flatten=True,
+            source=source
+        )
+        for post in posts:
+            resp = requests.post(self.url, data=post, auth=self.auth)

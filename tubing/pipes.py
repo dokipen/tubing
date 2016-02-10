@@ -39,14 +39,43 @@ class MakePipe(object):
         self.transformer_cls = transformer_cls
         self.default_chunk_size = default_chunk_size
 
-    def __call__(self, chunk_size=None, *args, **kwargs):
-        chunk_size = chunk_size or self.default_chunk_size
+    def __call__(self, *args, **kwargs):
+        chunk_size = self.default_chunk_size
+        if kwargs.get("chunk_size"):
+            chunk_size = kwargs["chunk_size"]
+            del kwargs["chunk_size"]
 
         def fn(source):
             transformer = self.transformer_cls(*args, **kwargs)
             return Pipe(source, chunk_size, transformer)
 
         return fn
+
+
+class PipeIterator(object):
+
+    def __init__(self, pipe, chunk_size):
+        self.pipe = pipe
+        self.chunk_size = chunk_size
+        self.eof = False
+
+    def next(self):
+        if self.eof:
+            logger.debug("iter stopped")
+            raise StopIteration
+
+        r, self.eof = self.pipe.read(self.chunk_size)
+        logger.debug("iter >> {}".format(r))
+        return r
+
+    def __next__(self):
+        """
+        Python 3 support
+        """
+        return self.next()
+
+    def __iter__(self):
+        return self
 
 
 class Pipe(object):
@@ -129,6 +158,16 @@ class Pipe(object):
             logger.exception("Pipe failed")
             hasattr(self.transformer, 'abort') and self.transformer.abort()
             raise
+
+    def read_iterator(self, chunk_size):
+        return PipeIterator(self, chunk_size)
+
+    def gen(self, chunk_size):
+        while True:
+            r, eof = self.read(chunk_size)
+            yield r
+            if eof:
+                return
 
 
 class GunzipTransformer(object):
@@ -268,3 +307,28 @@ class DebugPrinter(object):
 
 
 Debugger = MakePipe(DebugPrinter)
+
+
+class TransformerTransformer(object):
+    def __init__(self, callback):
+        self.callback = callback
+
+    def transform(self, chunk):
+        return self.callback(chunk)
+
+
+Transformer = MakePipe(TransformerTransformer)
+
+class ObjectStreamTransformerTransformer(object):
+    def __init__(self, callback):
+        self.callback = callback
+
+    def transform(self, chunk):
+        r = []
+        for obj in chunk:
+            r.append(self.callback(obj))
+        return r
+
+
+ObjectStreamTransformer = MakePipe(ObjectStreamTransformerTransformer)
+

@@ -61,37 +61,32 @@ class ElasticSearchError(Exception):
     pass
 
 
-class BulkSinkWriter(object):  # pragma: no cover
+class BulkUpdateTransformer(object):
     """
     BulkSinkWriter writes bulk updates to Elastic Search. If username or
     password is None, then auth will be skipped.
     """
-
-    def __init__(self, base, index_name, username=None, password=None, encoding='utf-8'):
-        self.base = base
-        self.index_name = index_name
-        self.username = username
-        self.password = password
+    def __init__(self, encoding='utf-8'):
         self.encoding = encoding
 
-    def _url(self):
-        return "%s/%s/_bulk" % (self.base, self.index_name)
-
-    def _auth(self):
-        if self.username or self.password:
-            return self.username, self.password
-
-    def write(self, chunk):
-        data = b''
+    def transform(self, chunk):
+        data = []
         for update in chunk:
-            data += update.serialize(self.encoding)
-        if data:
-            logger.debug("POSTING: " + data)
-            resp = requests.post(self._url(), data=data, auth=self._auth())
-            logger.debug(resp.text)
-            resp_obj = json.loads(resp.text)
-            if resp_obj['errors']:
-                raise ElasticSearchError(resp.text)
+            data.append(update.serialize(self.encoding))
+        return data
 
 
-BulkSink = sinks.MakeSink(BulkSinkWriter, default_chunk_size=2 ** 10)
+PrepareBulkUpdate = pipes.MakePipe(BulkUpdateTransformer, default_chunk_size=2 ** 10)
+
+def BulkUpdate(base_url, index, username=None, password=None, chunk_size=50, chunks_per_post=20):
+    """
+    Docs per post is chunk_size * chunks_per_post.
+    """
+    url = "%s/%s/_bulk" % (base_url, index)
+    return sinks.HTTPPost(
+        url=url,
+        username=username,
+        password=password,
+        chunk_size=chunk_size,
+        chunks_per_post=chunks_per_post,
+    )
