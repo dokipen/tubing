@@ -64,3 +64,22 @@ class ObjectReader(object):
 
 
 Objects = MakeSource(ObjectReader)
+
+
+class FileReader(object):
+    """
+    FileReader outputs bytes.
+    """
+
+    def __init__(self, filename):
+        self.f = open(filename, 'rb')
+
+    def read(self, amt=None):
+        chunk = self.f.read(amt)
+        if chunk:
+            return chunk, False
+        else:
+            return '', True
+
+
+File = MakeSource(FileReader)
