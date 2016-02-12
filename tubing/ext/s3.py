@@ -21,6 +21,8 @@ class S3Reader(object):  # pragma: no cover
         Create an S3 Source stream.
         """
         s3 = boto3.client('s3')
+        self.bucket = bucket
+        self.key = key
         self.response = s3.get_object(Bucket=bucket, Key=key)
 
     def read(self, amt):
