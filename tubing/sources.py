@@ -52,7 +52,7 @@ class Source(object):
         return other(self)
 
     def __str__(self):
-        return "<tubing.sources.Source({})>".format(self.source)
+        return "<tubing.sources.Source(%s)>" % (self.source)
 
 
 class ObjectReader(object):

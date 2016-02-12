@@ -65,7 +65,7 @@ class PipeIterator(object):
             raise StopIteration
 
         r, self.eof = self.pipe.read(self.chunk_size)
-        logger.debug("iter >> {}".format(r))
+        logger.debug("iter >> %s" % (r))
         return r
 
     def __next__(self):
