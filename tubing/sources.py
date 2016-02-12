@@ -16,6 +16,7 @@ and it won't close the stream. Only returning True as the second parameter
 indicates that the stream is closed.
 """
 import logging
+from tubing import compat
 
 logger = logging.getLogger('tubing.sources')
 
@@ -32,6 +33,7 @@ class MakeSource(object):
         return Source(self.reader_cls(*args, **kwargs))
 
 
+@compat.python_2_unicode_compatible
 class Source(object):
     """
     Source is a wrapper for Readers that allows piping.
@@ -49,11 +51,8 @@ class Source(object):
     def pipe(self, other):
         return other(self)
 
-    def __unicode__(self):
-        return u"<tubing.sources.Source({})>".format(self.source)
-
     def __str__(self):
-        return unicode(self).encode('utf-8')
+        return "<tubing.sources.Source({})>".format(self.source)
 
 
 class ObjectReader(object):
@@ -89,7 +88,7 @@ class FileReader(object):
             return '', True
 
     def __unicode__(self):
-        return u"<tubing.sources.File {}>".format(self.filename)
+        return u"<tubing.sources.File %s>" % (self.filename)
 
     def __str__(self):
         return unicode(self).encode('utf-8')

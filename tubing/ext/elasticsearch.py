@@ -10,7 +10,7 @@ from tubing import sinks, pipes
 logger = logging.getLogger('tubing.ext.elasticsearch')
 
 
-class DocUpdate(object): # pragma: no cover
+class DocUpdate(object):  # pragma: no cover
     """
     DocUpdate is an ElasticSearch document update object. It is meant to be
     used with BulkBatcher and returns an action and update.
@@ -66,6 +66,7 @@ class BulkUpdateTransformer(object):
     BulkSinkWriter writes bulk updates to Elastic Search. If username or
     password is None, then auth will be skipped.
     """
+
     def __init__(self, encoding='utf-8'):
         self.encoding = encoding
 
@@ -76,13 +77,24 @@ class BulkUpdateTransformer(object):
         return data
 
 
-PrepareBulkUpdate = pipes.MakePipe(BulkUpdateTransformer, default_chunk_size=2 ** 10)
+PrepareBulkUpdate = pipes.MakePipe(BulkUpdateTransformer,
+                                   default_chunk_size=2**10)
 
-def BulkUpdate(base_url, index, username=None, password=None, chunk_size=50, chunks_per_post=20, fail_on_error=True):
+
+def BulkUpdate(
+    base_url,
+    index,
+    username=None,
+    password=None,
+    chunk_size=50,
+    chunks_per_post=20,
+    fail_on_error=True
+):
     """
     Docs per post is chunk_size * chunks_per_post.
     """
     url = "%s/%s/_bulk" % (base_url, index)
+
     def response_handler(resp):
         try:
             try:
@@ -91,7 +103,8 @@ def BulkUpdate(base_url, index, username=None, password=None, chunk_size=50, chu
                 raise ElasticSearchError("invalid response: '%s'" % (resp.text))
 
             if resp_obj['errors']:
-                raise ElasticSearchError("errors in response: '%s'" % (resp.text))
+                raise ElasticSearchError("errors in response: '%s'" %
+                                         (resp.text))
         except:
             logger.exception(resp)
             if fail_on_error:

@@ -5,11 +5,12 @@ S3 Tubing extension.
 
 import boto3
 import logging
-from tubing import sources, sinks
+from tubing import sources, sinks, compat
 
 logger = logging.getLogger('tubing.ext.s3')
 
 
+@compat.python_2_unicode_compatible
 class S3Reader(object):  # pragma: no cover
     """
     Read file from S3. Expects AWS environmental variables to be set.
@@ -26,12 +27,8 @@ class S3Reader(object):  # pragma: no cover
         r = self.response['Body'].read(amt)
         return r or b'', not r
 
-    def __unicode__(self):
-        return u"<tubing.ext.s3.S3Source s3://{}/{}>".format(self.bucket, self.key)
-
     def __str__(self):
-        return unicode(self).encode('utf-8')
-
+        return "<tubing.ext.s3.S3Source s3://%s/%s>" % (self.bucket, self.key)
 
 
 S3Source = sources.MakeSource(S3Reader)

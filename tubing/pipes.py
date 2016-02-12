@@ -301,6 +301,7 @@ JSONSerializer = MakePipe(JSONSerializerTransformer)
 
 # Where should this all purpose thing go? Here I guess.
 class DebugPrinter(object):
+
     def transform(self, chunk):
         logger.debug(chunk)
         return chunk
@@ -310,6 +311,7 @@ Debugger = MakePipe(DebugPrinter)
 
 
 class TransformerTransformer(object):
+
     def __init__(self, callback):
         self.callback = callback
 
@@ -319,7 +321,9 @@ class TransformerTransformer(object):
 
 Transformer = MakePipe(TransformerTransformer)
 
+
 class ObjectStreamTransformerTransformer(object):
+
     def __init__(self, callback):
         self.callback = callback
 
@@ -331,4 +335,3 @@ class ObjectStreamTransformerTransformer(object):
 
 
 ObjectStreamTransformer = MakePipe(ObjectStreamTransformerTransformer)
-
