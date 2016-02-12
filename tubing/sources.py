@@ -49,6 +49,12 @@ class Source(object):
     def pipe(self, other):
         return other(self)
 
+    def __unicode__(self):
+        return u"<tubing.sources.Source({})>".format(self.source)
+
+    def __str__(self):
+        return unicode(self).encode('utf-8')
+
 
 class ObjectReader(object):
     """
@@ -72,7 +78,8 @@ class FileReader(object):
     """
 
     def __init__(self, filename):
-        self.f = open(filename, 'rb')
+        self.filename = filename
+        self.f = open(self.filename, 'rb')
 
     def read(self, amt=None):
         chunk = self.f.read(amt)
@@ -80,6 +87,12 @@ class FileReader(object):
             return chunk, False
         else:
             return '', True
+
+    def __unicode__(self):
+        return u"<tubing.sources.File {}>".format(self.filename)
+
+    def __str__(self):
+        return unicode(self).encode('utf-8')
 
 
 File = MakeSource(FileReader)

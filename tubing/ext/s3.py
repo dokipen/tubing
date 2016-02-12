@@ -26,6 +26,13 @@ class S3Reader(object):  # pragma: no cover
         r = self.response['Body'].read(amt)
         return r or b'', not r
 
+    def __unicode__(self):
+        return u"<tubing.ext.s3.S3Source s3://{}/{}>".format(self.bucket, self.key)
+
+    def __str__(self):
+        return unicode(self).encode('utf-8')
+
+
 
 S3Source = sources.MakeSource(S3Reader)
 
