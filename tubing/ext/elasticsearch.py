@@ -106,7 +106,7 @@ def BulkUpdate(
                 raise ElasticSearchError("errors in response: '%s'" %
                                          (resp.text))
         except:
-            logger.exception(resp)
+            logger.exception("%s %s" % (resp, resp.text))
             if fail_on_error:
                 raise
 
