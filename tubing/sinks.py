@@ -17,6 +17,7 @@ logger = logging.getLogger('tubing.sinks')
 
 
 class SinkRunner(object):
+
     def __init__(self, source, sink, chunk_size):
         self.source = source
         self.sink = sink
@@ -39,6 +40,7 @@ class SinkRunner(object):
 
 
 class Sink(object):
+
     def __init__(self, writer, chunk_size=2**16):
         self.writer = writer
         self.chunk_size = chunk_size
@@ -170,9 +172,13 @@ class HTTPPostWorker(object):
             source=source
         )
         for post in posts:
-            self.response_handler(requests.post(self.url,
-                                                data=post,
-                                                auth=self.auth))
+            self.response_handler(
+                requests.post(
+                    self.url,
+                    data=post,
+                    auth=self.auth
+                )
+            )
 
 
 def GeneratorSink(chunk_size, source):
@@ -208,5 +214,6 @@ def GeneratorGeneratorSink(chunk_size, per_gen, flatten, source):
 
 
 def GeneratorGenerator(chunk_size=2**10, per_gen=2 * 4, flatten=False):
-    return functools.partial(GeneratorGeneratorSink, chunk_size, per_gen,
-                             flatten)
+    return functools.partial(
+        GeneratorGeneratorSink, chunk_size, per_gen, flatten
+    )

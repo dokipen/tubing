@@ -15,10 +15,12 @@ DEBUG = False
 
 
 def MakeTransformerTubeFactory(transformer_cls, default_chunk_size=2**16):
-    return functools.partial(TransformerTube, transformer_cls, default_chunk_size)
+    return functools.partial(TransformerTube, transformer_cls,
+                             default_chunk_size)
 
 
 class TransformerTube(object):
+
     def __init__(self, transformer_cls, default_chunk_size, *args, **kwargs):
         self.chunk_size = default_chunk_size
         if kwargs.get("chunk_size"):
@@ -316,10 +318,12 @@ class ObjectStreamTransformerTransformer(object):
         return r
 
 
-ObjectStreamTransformer = MakeTransformerTubeFactory(ObjectStreamTransformerTransformer)
+ObjectStreamTransformer = MakeTransformerTubeFactory(
+    ObjectStreamTransformerTransformer)
 
 
 class TeeWorker(object):
+
     def __init__(self, uuid, manager):
         self.uuid = uuid
         self.manager = manager
@@ -353,18 +357,19 @@ class TeeManager(object):
         if we've reached the EOF in the source, or we have $amt parts. If amt is
         None, we should read to the source's EOF.
         """
-        return self.eof or amt and  self.buffer_len(uuid) >= amt
+        return self.eof or amt and self.buffer_len(uuid) >= amt
 
     def shift_buffers(self, uuid, amt):
         """
         Remove $amt data from the front of the buffers and return it.
         """
         if self.buffers[uuid]:
-            r, self.buffers[uuid] = self.buffers[uuid][:amt], self.buffers[uuid][
-                amt or len(
-                    self.buffers[uuid]
-                ):
-            ]
+            r, self.buffers[uuid] = self.buffers[uuid][:amt], self.buffers[
+                uuid][
+                    amt or len(
+                        self.buffers[uuid]
+                    ):
+                ]
             return r
         else:
             return b''
@@ -408,6 +413,7 @@ class TeeManager(object):
 
 
 class TeeTransformer(object):
+
     def __init__(self, sink):
         self.sink = sink
 

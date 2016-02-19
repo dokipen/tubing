@@ -77,8 +77,10 @@ class BulkUpdateTransformer(object):
         return data
 
 
-PrepareBulkUpdate = tubes.MakeTransformerTubeFactory(BulkUpdateTransformer,
-                                   default_chunk_size=2**10)
+PrepareBulkUpdate = tubes.MakeTransformerTubeFactory(
+    BulkUpdateTransformer,
+    default_chunk_size=2**10
+)
 
 
 def BulkUpdate(
@@ -103,8 +105,9 @@ def BulkUpdate(
                 raise ElasticSearchError("invalid response: '%s'" % (resp.text))
 
             if resp_obj['errors']:
-                raise ElasticSearchError("errors in response: '%s'" %
-                                         (resp.text))
+                raise ElasticSearchError(
+                    "errors in response: '%s'" % (resp.text)
+                )
         except:
             logger.exception("%s %s" % (resp, resp.text))
             if fail_on_error:
