@@ -24,7 +24,7 @@ to turn it into a Tube. A Transformer has the following iterface::
         def transform(self, chunk):
             return new_chunk
 
-    NewPipe = MakePipe(Transformer)
+    NewTube = MakeTrasformerTubeFactory(Transformer)
 
 A chunk is an iterable of whatever type of stream we are working on, whether it
 be bytes, unicode characters, strings or python objects.  We can index it,
@@ -96,7 +96,23 @@ be called, and he'll get everyone to work.
 Technically, we could split the TubeWorker interface into two parts, but it's not
 really necessary since they share the same state. We could also combine TubeFactory,
 Tube and TubeWorker, and just build up state overtime. I've seriously consider this,
-but I don't know, this feels better. I admit, it is a little complicated.
+but I don't know, this feels better. I admit, it is a little complicated, but one advantage you get is that you can do something like this::
+
+    from tubing import tubes
+
+    tube = tubes.GZip(chunk_size=2**32)
+
+    source | tube | output1
+    source | tube | output2
+
+Since tube is a factory and not an object, each tubeline will have it's own
+state. tubeline.... I just made that up. That's an execution pipeline in
+tubing. But we don't want to call it a pipeline, it's a tubeline. Maybe there's
+a better name? I picture a chemistry lab with a bunch of transparent tubes
+connected to beakers and things like that.
+
+.. image:: http://imgur.com/jTtHITH.jpg
+    :alt: chemistry lab
 
 MakeTransformerTubeFactory
 --------------------------
