@@ -49,7 +49,7 @@ class Source(object):
         return self.pipe(other)
 
     def pipe(self, other):
-        return other(self)
+        return other.recieve(self)
 
     def __str__(self):
         return "<tubing.sources.Source(%s)>" % (self.source)
@@ -76,9 +76,9 @@ class FileReader(object):
     FileReader outputs bytes.
     """
 
-    def __init__(self, filename):
+    def __init__(self, filename, mode="rb"):
         self.filename = filename
-        self.f = open(self.filename, 'rb')
+        self.f = open(self.filename, mode)
 
     def read(self, amt=None):
         chunk = self.f.read(amt)

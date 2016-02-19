@@ -5,7 +5,7 @@ Elasticsearch Extension.
 import json
 import requests
 import logging
-from tubing import sinks, pipes
+from tubing import sinks, tubes
 
 logger = logging.getLogger('tubing.ext.elasticsearch')
 
@@ -77,7 +77,7 @@ class BulkUpdateTransformer(object):
         return data
 
 
-PrepareBulkUpdate = pipes.MakePipe(BulkUpdateTransformer,
+PrepareBulkUpdate = tubes.MakeTransformationTubeFactory(BulkUpdateTransformer,
                                    default_chunk_size=2**10)
 
 
@@ -88,7 +88,7 @@ def BulkUpdate(
     password=None,
     chunk_size=50,
     chunks_per_post=20,
-    fail_on_error=True
+    fail_on_error=True,
 ):
     """
     Docs per post is chunk_size * chunks_per_post.

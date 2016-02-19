@@ -33,7 +33,7 @@ class S3Reader(object):  # pragma: no cover
         return "<tubing.ext.s3.S3Source s3://%s/%s>" % (self.bucket, self.key)
 
 
-S3Source = sources.MakeSource(S3Reader)
+S3Source = sources.MakeSourceFactory(S3Reader)
 
 
 class S3SinkWriter(object):  # pragma: no cover
@@ -103,4 +103,4 @@ class S3SinkWriter(object):  # pragma: no cover
         )
 
 
-S3Sink = sinks.MakeSink(S3SinkWriter)
+S3Sink = sinks.MakeSinkFactory(S3SinkWriter)

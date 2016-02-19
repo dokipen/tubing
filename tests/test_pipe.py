@@ -1,6 +1,6 @@
 import logging
 import unittest2 as unittest
-from tubing import sinks, sources, pipes
+from tubing import sinks, sources, tubes
 
 SOURCE_DATA = [
     dict(
@@ -21,21 +21,22 @@ SOURCE_DATA = [
     ),
 ]
 
-logger = logging.getLogger("tubing.test_pipe")
+logger = logging.getLogger("tubing.test_tube")
 
 
 class PipeTestCase(unittest.TestCase):
 
     def testPipe(self):
         source = sources.Objects(SOURCE_DATA)
-        sink = source | pipes.JSONSerializer(separators=(',', ':')) \
-                      | pipes.Joined(by=b"\n") \
-                      | pipes.Gzip() \
-                      | pipes.Gunzip() \
-                      | pipes.Split(on=b"\n") \
-                      | pipes.JSONParser() \
+        sink = source | tubes.JSONSerializer(separators=(',', ':')) \
+                      | tubes.Joined(by=b"\n") \
+                      | tubes.Gzip() \
+                      | tubes.Gunzip() \
+                      | tubes.Split(on=b"\n") \
+                      | tubes.JSONParser() \
                       | sinks.Objects()
 
+        logger.debug("%r", sink)
         self.assertEqual(sink[0], SOURCE_DATA[0])
         self.assertEqual(sink[1], SOURCE_DATA[1])
         self.assertEqual(sink[2], SOURCE_DATA[2])
@@ -56,7 +57,7 @@ class PipeTestCase(unittest.TestCase):
             def abort(self):
                 results['abort'] = True
 
-        Fail = sinks.MakeSink(FailSink)
+        Fail = sinks.MakeSinkFactory(FailSink)
 
         class SucceedSink(object):
             "Bob"
@@ -70,7 +71,7 @@ class PipeTestCase(unittest.TestCase):
             def abort(self):
                 results['abort'] = True
 
-        Succeed = sinks.MakeSink(SucceedSink)
+        Succeed = sinks.MakeSinkFactory(SucceedSink)
 
         try:
             sources.Objects(SOURCE_DATA) | Fail()

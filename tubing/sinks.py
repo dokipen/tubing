@@ -16,81 +16,61 @@ import requests
 logger = logging.getLogger('tubing.sinks')
 
 
-class MakeSink(object):
-    """
-    MakeSink returns a factory that wraps a Writer and executes the pipeline.
-    default_chunk_size should be set according to the type of stream that the
-    sink works on. Objects are heavier than byte streams, so should have a
-    lower default_chunk_size.
-    """
+class SinkRunner(object):
+    def __init__(self, source, sink, chunk_size):
+        self.source = source
+        self.sink = sink
+        self.chunk_size = chunk_size
 
-    def __init__(self, sink_cls, default_chunk_size=2**16):
-        self.sink_cls = sink_cls
-        self.default_chunk_size = default_chunk_size
-
-    def __call__(self, *args, **kwargs):
-        if kwargs.get('chunk_size'):
-            chunk_size = kwargs['chunk_size']
-            del kwargs['chunk_size']
-        else:
-            chunk_size = None
-
-        chunk_size = chunk_size or self.default_chunk_size
-
-        def fn(source):
-            try:
-                sink = self.sink_cls(*args, **kwargs)
-                logger.debug("reading %s" % (source))
-                chunk, eof = source.read(chunk_size)
-                sink.write(chunk)
-                while not eof:
-                    chunk, eof = source.read(chunk_size)
-                    sink.write(chunk)
-                hasattr(sink, 'close') and sink.close()
-                return sink
-            except:
-                logger.exception("Pipe failed")
-                hasattr(sink, 'abort') and sink.abort()
-                raise
-
-        return fn
+    def __call__(self):
+        try:
+            logger.debug("reading %s" % (self.source))
+            chunk, eof = self.source.read(self.chunk_size)
+            self.sink.write(chunk)
+            while not eof:
+                chunk, eof = self.source.read(self.chunk_size)
+                self.sink.write(chunk)
+            hasattr(self.sink, 'close') and self.sink.close()
+            return self.sink.writer
+        except:
+            logger.exception("Pipe failed")
+            hasattr(self.sink, 'abort') and self.sink.abort()
+            raise
 
 
-def GeneratorSink(chunk_size, source):
-    eof = False
-    while not eof:
-        r, eof = source.read(chunk_size)
-        yield r
+class Sink(object):
+    def __init__(self, writer, chunk_size=2**16):
+        self.writer = writer
+        self.chunk_size = chunk_size
+
+    def write(self, chunk):
+        self.writer.write(chunk)
+        return self
+
+    def close(self):
+        hasattr(self.writer, 'close') and self.writer.close()
+
+    def abort(self):
+        hasattr(self.writer, 'abort') and self.writer.abort()
+
+    def recieve(self, source):
+        SinkRunner(source, self, self.chunk_size)()
+        return self.writer
 
 
-def Generator(chunk_size=2**10):
-    return functools.partial(GeneratorSink, chunk_size)
+def SinkFactory(writer_cls, default_chunk_size=2**16, *args, **kwargs):
+    if kwargs.get('chunk_size'):
+        chunk_size = kwargs['chunk_size']
+        del kwargs['chunk_size']
+    else:
+        chunk_size = default_chunk_size
+
+    writer = writer_cls(*args, **kwargs)
+    return Sink(writer, chunk_size)
 
 
-def GeneratorGeneratorSink(chunk_size, per_gen, flatten, source):
-    d = dict(eof=False)
-
-    def gen():
-        i = per_gen
-        while not d['eof'] and i:
-            chunk, d['eof'] = source.read(chunk_size)
-            logger.debug(repr(chunk))
-            if flatten:
-                for line in chunk:
-                    yield line
-            else:
-                yield chunk
-            i -= 1
-
-    while not d['eof']:
-        yield gen()
-
-    logger.debug("all done")
-
-
-def GeneratorGenerator(chunk_size=2**10, per_gen=2 * 4, flatten=False):
-    return functools.partial(GeneratorGeneratorSink, chunk_size, per_gen,
-                             flatten)
+def MakeSinkFactory(sink_cls, default_chunk_size=2**16):
+    return functools.partial(SinkFactory, sink_cls, default_chunk_size)
 
 
 class ObjectsSink(list):
@@ -102,7 +82,7 @@ class ObjectsSink(list):
         self.extend(objs)
 
 
-Objects = MakeSink(ObjectsSink, 2**4)
+Objects = MakeSinkFactory(ObjectsSink, 2**4)
 
 
 class BytesWriter(io.BytesIO):
@@ -123,7 +103,7 @@ class BytesWriter(io.BytesIO):
         super(BytesWriter, self).close()
 
 
-Bytes = MakeSink(BytesWriter, 2**16)
+Bytes = MakeSinkFactory(BytesWriter, 2**16)
 
 
 class FileWriter(object):
@@ -142,7 +122,7 @@ class FileWriter(object):
         self.f.close()
 
 
-File = MakeSink(FileWriter)
+File = MakeSinkFactory(FileWriter)
 
 
 class DebugPrinter(object):
@@ -157,10 +137,10 @@ class DebugPrinter(object):
         logger.debug("ABORTED")
 
 
-Debugger = MakeSink(DebugPrinter)
+Debugger = MakeSinkFactory(DebugPrinter)
 
 
-class HTTPPost(object):
+class HTTPPostWorker(object):
     """
     Expects a stream of byte strings.
     """
@@ -172,7 +152,7 @@ class HTTPPost(object):
         password=None,
         chunk_size=2**4,
         chunks_per_post=2**10,
-        response_handler=lambda _: None
+        response_handler=lambda _: None,
     ):
         self.url = url
         self.auth = None
@@ -193,3 +173,40 @@ class HTTPPost(object):
             self.response_handler(requests.post(self.url,
                                                 data=post,
                                                 auth=self.auth))
+
+
+def GeneratorSink(chunk_size, source):
+    eof = False
+    while not eof:
+        r, eof = source.read(chunk_size)
+        yield r
+
+
+def Generator(chunk_size=2**10):
+    return functools.partial(GeneratorSink, chunk_size)
+
+
+def GeneratorGeneratorSink(chunk_size, per_gen, flatten, source):
+    d = dict(eof=False)
+
+    def gen():
+        i = per_gen
+        while not d['eof'] and i:
+            chunk, d['eof'] = source.read(chunk_size)
+            logger.debug("%r" % (chunk))
+            if flatten:
+                for line in chunk:
+                    yield line
+            else:
+                yield chunk
+            i -= 1
+
+    while not d['eof']:
+        yield gen()
+
+    logger.debug("all done")
+
+
+def GeneratorGenerator(chunk_size=2**10, per_gen=2 * 4, flatten=False):
+    return functools.partial(GeneratorGeneratorSink, chunk_size, per_gen,
+                             flatten)
