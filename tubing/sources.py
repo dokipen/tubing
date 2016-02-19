@@ -2,13 +2,13 @@ from __future__ import print_function
 """
 Tubing sources are defined here. If you want to make your own Source, create a
 reader class with a read(amt) function, where amt is the amount of `stuff` to
-read. MakeSource can generate a Source from your Reader. Ex::
+read. MakeSourceFactory can generate a Source from your Reader. Ex::
 
     class MyReader(object):
         def read(self, amt):
             return [0] * amt, False
 
-    MySource = MakeSource(MyReader)
+    MySource = MakeSourceFactory(MyReader)
 
 The read(amt) function should return a chunk of data and a boolean indicated if
 we've reached EOF. Unlike normal python streams, it's ok to return empty sets
@@ -21,9 +21,9 @@ from tubing import compat
 logger = logging.getLogger('tubing.sources')
 
 
-class MakeSource(object):
+class MakeSourceFactory(object):
     """
-    MakeSource takes a reader object and returns a Source factory.
+    MakeSourceFactory takes a reader object and returns a Source factory.
     """
 
     def __init__(self, reader_cls):
@@ -68,7 +68,7 @@ class ObjectReader(object):
         return r, len(self.objs) == 0
 
 
-Objects = MakeSource(ObjectReader)
+Objects = MakeSourceFactory(ObjectReader)
 
 
 class FileReader(object):
@@ -94,4 +94,4 @@ class FileReader(object):
         return unicode(self).encode('utf-8')
 
 
-File = MakeSource(FileReader)
+File = MakeSourceFactory(FileReader)

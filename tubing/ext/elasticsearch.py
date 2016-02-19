@@ -77,7 +77,7 @@ class BulkUpdateTransformer(object):
         return data
 
 
-PrepareBulkUpdate = tubes.MakeTransformationTubeFactory(BulkUpdateTransformer,
+PrepareBulkUpdate = tubes.MakeTransformerTubeFactory(BulkUpdateTransformer,
                                    default_chunk_size=2**10)
 
 
