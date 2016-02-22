@@ -8,10 +8,10 @@ Tubing sinks are targets for streams of data. To make your own sink, define a Wr
 
     MySink = MakeSink(MyWriter)
 """
+import requests
 import logging
 import io
 import functools
-import requests
 
 logger = logging.getLogger('tubing.sinks')
 

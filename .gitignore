@@ -5,3 +5,4 @@ dist/
 build/
 .ruby-*
 .coverage
+/docs/_build

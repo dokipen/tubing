@@ -48,7 +48,10 @@ setup(
     package_data={"": ["LICENSE"], "tubing": ["VERSION"]},
     packages=find_packages(exclude='tests'),
     include_package_data=True,
-    install_requires=[],
+    install_requires=[
+        "requests",
+        "urllib3",
+    ],
     license="MIT",
     zip_safe=False,
     classifiers=(
@@ -75,14 +78,11 @@ setup(
             "nose",
             "unittest2",
             "coveralls",
-            "requests",
             "boto3",
         ],
         "s3": [
             "boto3",
         ],
-        "elasticsearch": [
-            "requests",
-        ],
+        "elasticsearch": [],
     },
 )

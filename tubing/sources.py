@@ -16,10 +16,25 @@ and it won't close the stream. Only returning True as the second parameter
 indicates that the stream is closed.
 """
 import logging
+import socket
+import signal
 from tubing import compat
 
 logger = logging.getLogger('tubing.sources')
 
+HANDLERS = []
+
+def handle_signals(*signals):
+    print("setting up sig handlers")
+    def handle(*args, **kwargs):
+        print("calling handlers {}".format(HANDLERS))
+        for handle in HANDLERS:
+            handle()
+    for sig in signals:
+        print("setting up {}".format(sig))
+        signal.signal(sig, handle)
+
+handle_signals(signal.SIGTERM, signal.SIGINT, signal.SIGHUP)
 
 class MakeSourceFactory(object):
     """
@@ -30,7 +45,12 @@ class MakeSourceFactory(object):
         self.reader_cls = reader_cls
 
     def __call__(self, *args, **kwargs):
-        return Source(self.reader_cls(*args, **kwargs))
+        reader = self.reader_cls(*args, **kwargs)
+        src = Source(reader)
+        if hasattr(reader, 'interrupt'):
+            HANDLERS.append(reader.interrupt)
+        print("handlers: {}".format(HANDLERS))
+        return src
 
 
 @compat.python_2_unicode_compatible
@@ -95,3 +115,34 @@ class FileReader(object):
 
 
 File = MakeSourceFactory(FileReader)
+
+
+class SocketReader(object):
+    """
+    UDPReader binds and reads from a UDP socket.
+    """
+    def __init__(self, ip, port, *args):
+        self.sock = socket.socket(*args)
+        self.sock.bind((ip, port))
+        self.sock.settimeout(0.1)
+        self.eof = False
+
+    def read(self, amt=None):
+        if self.eof:
+            return b'', True
+
+        try:
+            data, addr = self.sock.recvfrom(amt)
+            logger.debug("{} >> {}".format(addr, data))
+            return data, False
+        except socket.timeout:
+            return b'', False
+        except socket.error:
+            return b'', True
+
+    def interrupt(self):
+        print("interrupt called")
+        self.eof = True
+
+
+Socket = MakeSourceFactory(SocketReader)
