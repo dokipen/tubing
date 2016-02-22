@@ -18,6 +18,7 @@ indicates that the stream is closed.
 import logging
 import socket
 import signal
+import io
 from tubing import compat
 
 logger = logging.getLogger('tubing.sources')
@@ -141,3 +142,31 @@ class SocketReader(object):
 
 
 Socket = MakeSourceFactory(SocketReader)
+
+
+class BytesReader(object):
+    def __init__(self, byts):
+        self.io = io.BytesIO(byts)
+
+    def read(self, amt=None):
+        r = self.io.read(amt)
+        if r:
+            return r, False
+        else:
+            return b'', True
+
+Bytes = MakeSourceFactory(BytesReader)
+
+
+class IOReader(object):
+    def __init__(self, stream):
+        self.io = stream
+
+    def read(self, amt=None):
+        r = self.io.read(amt)
+        if r:
+            return r, False
+        else:
+            return b'', True
+
+IO = MakeSourceFactory(IOReader)

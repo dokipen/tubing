@@ -423,3 +423,14 @@ class TeeTransformer(object):
 
 
 Tee = MakeTransformerTubeFactory(TeeTransformer)
+
+
+class FilterTransformer(object):
+    def __init__(self, fn):
+        self.fn = fn
+
+    def transform(self, chunk):
+        return filter(self.fn, chunk)
+
+
+Filter = MakeTransformerTubeFactory(FilterTransformer)
