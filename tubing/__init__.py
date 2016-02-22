@@ -12,10 +12,19 @@ to use and understand.
 
 Nobles are very important too, but harder to satisfy. We never know what crazy
 plans they'll have in mind, so we must be ready. They need the tools to build
-new tubes that extend to infinity and beyond.
+new tubes that extend our apparatus in unexpected ways.
 
 For the benefit of the nobles, and ourselves, we're going to outline exactly
-how things work now, and possibly make them simpler in the process.
+how things work now. This documentation is also an exercise in simplifying the
+code base.
+
+We'll call a tubing pipeline an apparatus. An apparatus has a Source, zero to
+many Tubes, and a Sink.
+
+A stream is what we call the units flowing through our Tubes.
+
+Tubes
+=====
 
 The easiest way to extend tubing is to create a Transformer, and use MakeTransformerTubeFactory
 to turn it into a Tube. A Transformer has the following iterface::
@@ -29,9 +38,9 @@ to turn it into a Tube. A Transformer has the following iterface::
 A chunk is an iterable of whatever type of stream we are working on, whether it
 be bytes, unicode characters, strings or python objects.  We can index it,
 slice it, or iterate over it. `transform` simple takes a chunk, and makes a new
-chunk out of it. `MakePipe` will take care of all the dirty work. Transformers
-are enough for most tasks, but if you need to do something more complex, you
-may need to go deeper.
+chunk out of it. `MakeTransformerTubeFactory` will take care of all the dirty
+work. Transformers are enough for most tasks, but if you need to do something
+more complex, you may need to go deeper.
 
 .. image:: http://i.imgur.com/DyPouyL.png
     alt: Leonardo Decaprio
@@ -114,13 +123,15 @@ connected to beakers and things like that.
 .. image:: http://imgur.com/jTtHITH.jpg
     :alt: chemistry lab
 
+Let's call it an apparatus.
+
 MakeTransformerTubeFactory
 --------------------------
 
-So how does MakeTransformerTubeFactoryFactory turn a Transformer into a TubeFactory?
-MakeTransformerTubeFactoryFactory is a utility that creates a function that wrap a transformer in
-a tube. Sort of complicate, eh? I'm sorry about that, but let's see if we can
-break it down.
+So how does MakeTransformerTubeFactoryFactory turn a Transformer into a
+TubeFactory?  MakeTransformerTubeFactoryFactory is a utility that creates a
+function that wrap a transformer in a tube. Sort of complicate, eh? I'm sorry
+about that, but let's see if we can break it down.
 
 MakeTransformerTubeFactoryFactory returns a partial function out of the TransformerTube
 instantiation. For the uninitiated, a partial is just a new version
@@ -139,6 +150,27 @@ You'll probably want to set it if you are using something other than bytes. It
 can be overriden by plebes, this is just the default if they don't specify it.
 Remember, we should be making the plebes job easy, so try and be a nice noble
 and set it to something sensible.
+
+We've explained Tubes, very well I might add. And it's a good thing. They are
+the most complicated bit in tubing. All that's left is Sources and Sinks.
+
+Sources
+=======
+
+TODO
+
+Sinks
+=====
+
+TODO
+
+Things You Can't do with Tubing
+===============================
+
+ - Tee to another apparatus
+ - async programming
+ - your laundry
+
 """
 import pkgutil
 

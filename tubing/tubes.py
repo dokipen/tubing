@@ -2,6 +2,9 @@ from __future__ import print_function
 """
 This is where all transformations in the tube occur. To make your own tube,
 define a Transformer object and pass it to MakeTransformerTubeFactory.
+
+If you don't need state, you can pass a transformer function directly to a
+ChunkMap or Map Tube.
 """
 import logging
 import json
@@ -11,15 +14,20 @@ import functools
 
 logger = logging.getLogger('tubing.tubes')
 
-DEBUG = False
-
 
 def MakeTransformerTubeFactory(transformer_cls, default_chunk_size=2**16):
+    """
+    Returns a TransformerTubeFactory, which in turn, returns a TransformerTube.
+    """
     return functools.partial(TransformerTube, transformer_cls,
                              default_chunk_size)
 
 
 class TransformerTube(object):
+    """
+    TransformerTube is what is returned by a TransformerTubeFactory. It
+    manages the initialization of the TransformerTubeWorker.
+    """
 
     def __init__(self, transformer_cls, default_chunk_size, *args, **kwargs):
         self.chunk_size = default_chunk_size
@@ -38,9 +46,9 @@ class TransformerTube(object):
 
 class TransformerTubeWorker(object):
     """
-    Tube wraps a Transformer and does all the grunt work that most tubes need
-    to do.  Transformers should implement transform(chunk), and optionally
-    close() and abort().
+    TransformerTubeWorker wraps a Transformer and does all the grunt work that
+    most tubes need to do.  Transformers should implement transform(chunk), and
+    optionally close() and abort().
     """
 
     def __init__(self, source, chunk_size, transformer):
@@ -129,6 +137,9 @@ class TransformerTubeWorker(object):
 
 
 class TubeIterator(object):
+    """
+    TubeIterator wraps a tube in an iterator object.
+    """
 
     def __init__(self, tube, chunk_size):
         self.tube = tube
@@ -285,6 +296,10 @@ JSONSerializer = MakeTransformerTubeFactory(JSONSerializerTransformer)
 
 # Where should this all purpose thing go? Here I guess.
 class DebugPrinter(object):
+    """
+    DebugPrinter sends everything to the module logger before passing it down
+    the apparatus.
+    """
 
     def transform(self, chunk):
         logger.debug(chunk)
@@ -294,126 +309,40 @@ class DebugPrinter(object):
 Debugger = MakeTransformerTubeFactory(DebugPrinter)
 
 
-class TransformerTransformer(object):
-
-    def __init__(self, callback):
-        self.callback = callback
-
-    def transform(self, chunk):
-        return self.callback(chunk)
-
-
-Transformer = MakeTransformerTubeFactory(TransformerTransformer)
-
-
-class ObjectStreamTransformerTransformer(object):
-
-    def __init__(self, callback):
-        self.callback = callback
+class ChunkMapTransformer(object):
+    """
+    ChunkMapTransformer turns a chunk mapper function into a TubeFactory.
+    """
+    def __init__(self, fn):
+        self.fn = fn
 
     def transform(self, chunk):
-        r = []
-        for obj in chunk:
-            r.append(self.callback(obj))
-        return r
+        return self.fn(chunk)
 
 
-ObjectStreamTransformer = MakeTransformerTubeFactory(
-    ObjectStreamTransformerTransformer)
+ChunkMap = MakeTransformerTubeFactory(ChunkMapTransformer)
 
 
-class TeeWorker(object):
+class MapTransformer(object):
+    """
+    ObjectStreamTransformerTransformer takes a callback and applies it to each
+    element of the chunk. It's the easiest way to make a transformer.
+    """
+    def __init__(self, fn):
+        self.fn = fn
 
-    def __init__(self, uuid, manager):
-        self.uuid = uuid
-        self.manager = manager
-
-    def read(self, amt):
-        return self.manager.read(uuid, amt)
-
-    def tube(self, other):
-        return other(self)
-
-    def __or__(self, other):
-        return self.tube(other)
+    def transform(self, chunk):
+        return map(self.fn, chunk)
 
 
-class TeeManager(object):
-
-    def __init__(self, source, chunk_size):
-        self.source = source
-        self.chunk_size = chunk_size
-        self.eof = False
-        self.buffers = {}
-
-    def tee(self):
-        uuid = uuid.uuid4()
-        self.buffers[uuid] = None
-        return TeeWorker(uuid, self)
-
-    def read_complete(self, uuid, amt):
-        """
-        read_complete tells us if the current request is fulfilled. It's fulfilled
-        if we've reached the EOF in the source, or we have $amt parts. If amt is
-        None, we should read to the source's EOF.
-        """
-        return self.eof or amt and self.buffer_len(uuid) >= amt
-
-    def shift_buffers(self, uuid, amt):
-        """
-        Remove $amt data from the front of the buffers and return it.
-        """
-        if self.buffers[uuid]:
-            r, self.buffers[uuid] = self.buffers[uuid][:amt], self.buffers[
-                uuid][
-                    amt or len(
-                        self.buffers[uuid]
-                    ):
-                ]
-            return r
-        else:
-            return b''
-
-    def append(self, chunk):
-        """
-        append to the buffer, creating it if it doesn't exist.
-        """
-        for buffer in buffers.values():
-            if self.buffer:
-                self.buffer += chunk
-            else:
-                self.buffer = chunk
-
-    def buffer_len(self, uuid):
-        """
-        buffer_len even if buffer is None.
-        """
-        return self.buffers[uuid] and len(self.buffers[uuid]) or 0
-
-    def read(self, uuid, amt=None):
-        """
-        This is where the rubber meets the snow.
-        """
-        try:
-            while not self.read_complete(uuid, amt):
-                inchunk, self.eof = self.source.read(self.chunk_size)
-                if inchunk:
-                    outchunk = self.transformer.transform(inchunk)
-                    if outchunk:
-                        self.append(outchunk)
-
-            if self.eof and (not amt or self.buffer_len() <= amt):
-                # We've written everything, we're done
-                return self.shift_buffer(uuid, amt), True
-
-            return self.shift_buffer(uuid, amt), False
-        except:
-            logger.exception("Tube failed")
-            raise
+Map = MakeTransformerTubeFactory(MapTransformer)
 
 
 class TeeTransformer(object):
-
+    """
+    TeeTransformer writes the chunk to the specified sink and passes it along
+    the apparatus.
+    """
     def __init__(self, sink):
         self.sink = sink
 
@@ -426,6 +355,10 @@ Tee = MakeTransformerTubeFactory(TeeTransformer)
 
 
 class FilterTransformer(object):
+    """
+    FilterTransformer takes a filter function and wraps a call to the filter
+    built-in for each chunk.
+    """
     def __init__(self, fn):
         self.fn = fn
 

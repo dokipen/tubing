@@ -84,5 +84,8 @@ setup(
             "boto3",
         ],
         "elasticsearch": [],
+        "docs": [
+            "sphinx",
+        ],
     },
 )
