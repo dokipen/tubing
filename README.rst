@@ -29,7 +29,7 @@ with you.
 
 Tubing is pretty bare-bones at the moment. We've tried to make it easy to add
 your own functionality. Hopefully you find it not all that unpleasant. There
-are three sections below for adding sources, pipes and sink. If you do make
+are three sections below for adding sources, tubes and sink. If you do make
 some additions, think about committing them back upstream. We'd love to have
 a full suite of tools.
 
@@ -37,7 +37,7 @@ Now, witness the power of this fully operational I/O library.
 
 .. code-block:: python
 
-    from tubing import sources, pipes, sinks
+    from tubing import sources, tubes, sinks
 
     objs = [
         dict(
@@ -52,9 +52,9 @@ Now, witness the power of this fully operational I/O library.
         ),
     ]
     sources.Objects(objs) \
-         | pipes.JSONSerializer() \
-         | pipes.Joined(by=b"\n") \
-         | pipes.Gzip() \
+         | tubes.JSONSerializer() \
+         | tubes.Joined(by=b"\n") \
+         | tubes.Gzip() \
          | sinks.File("output.gz", "wb")
 
 Then in our old friend bash.
@@ -66,7 +66,7 @@ Then in our old friend bash.
     {"alignment": "good", "birthdate": "08/03/1977", "name": "Tom Brady"}
     $
 
-We need to seriously think about renaming pipes to tubes.. man, what was I
+We need to seriously think about renaming tubes to tubes.. man, what was I
 thinking?
 
 Catalog
@@ -83,7 +83,7 @@ Sources
 |`Bytes`  |Creates a stream from a byte string.|
 +---------+------------------------------------+
 
-Pipes
+Tubes
 ~~~~~
 
 +----------------+-----------------------------------------------------+
@@ -100,7 +100,7 @@ Pipes
 |`Joined`        |Joins a stream of the same type as the `by` argument.|
 +----------------+-----------------------------------------------------+
 |`Debugger`      |Proxies stream, writing each chunk to the            |
-|                |`tubing.pipes` debugger with level DEBUG.            |
+|                |`tubing.tubes` debugger with level DEBUG.            |
 +----------------+-----------------------------------------------------+
 
 Sinks
@@ -111,7 +111,7 @@ Sinks
 +----------+----------------------------------------------------------------+
 |`File`    |Writes each chunk to a file.                                    |
 +----------+----------------------------------------------------------------+
-|`Debugger`|Writes each chunk to the tubing.pipes debugger with level DEBUG.|
+|`Debugger`|Writes each chunk to the tubing.tubes debugger with level DEBUG.|
 +----------+----------------------------------------------------------------+
 
 Extensions
@@ -153,13 +153,13 @@ To make your own source, create a Reader class with the following interface.
 
 The important thing to remember is that your read function should return an
 iterable of units of data, not a single piece of data. Then wrap your reader in
-the loving embrace of MakeSource.
+the loving embrace of MakeSourceFactory.
 
 .. code-block:: python
 
     from tubing import sources
 
-    MySource = sources.MakeSource(MyReader)
+    MySource = sources.MakeSourceFactory(MyReader)
 
 Now it can be used in a pipeline!
 
@@ -167,15 +167,15 @@ Now it can be used in a pipeline!
 
     from __future__ import print_function
 
-    from tubing import pipes
+    from tubing import tubes
     sink = MySource(data="goodbye cruel world!", count=1) \
-         | pipes.Joined(by=b"\n") \
+         | tubes.Joined(by=b"\n") \
          | sinks.Bytes()
 
     print(sinks.result)
     # Output: goodby cruel world!
 
-Pipes
+Tubes
 -----
 
 Making your own pipe is a lot more fun, trust me. First make a Transformer.
@@ -189,15 +189,15 @@ Making your own pipe is a lot more fun, trust me. First make a Transformer.
 `chunk` is an iterable with a len() of whatever type of data the stream is
 working with. In Transformers, you don't need to worry about buffer size or
 closing or exception, just transform an iterable to another iterable. There are
-lots of examples in pipes.py.
+lots of examples in tubes.py.
 
 Next give Optimus Prime a hug.
 
 .. code-block:: python
 
-    from tubing import pipes
+    from tubing import tubes
 
-    AllMixedUp = pipes.MakePipe(OptimusPrime)
+    AllMixedUp = tubes.MakeTranformerTubeFactory(OptimusPrime)
 
 Ready to mix up some data?
 
@@ -227,7 +227,7 @@ Well.. I'm this far, let's just push through.
 .. code-block:: python
 
     from __future__ import print_function
-    from tubing import sources, pipes, sinks
+    from tubing import sources, tubes, sinks
 
     class StdoutWriter(object):
         def write(self, chunk):
@@ -242,14 +242,14 @@ Well.. I'm this far, let's just push through.
             # this is also optional
             print("Something terrible has occurred.")
 
-    Debugger = sinks.MakeSink(StdoutWriter)
+    Debugger = sinks.MakeSinkFactory(StdoutWriter)
 
     objs = [{"number": i} for i in range(0, 10)]
 
     sink = sources.Objects(objs) \
          | AllMixedUp(chunk_size=2) \
-         | pipes.JSONSerializer() \
-         | pipes.Joined(by=b"\n") \
+         | tubes.JSONSerializer() \
+         | tubes.Joined(by=b"\n") \
          | Debugger()
     # Output:
     #{"number": 1}

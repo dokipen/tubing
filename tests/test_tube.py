@@ -42,6 +42,23 @@ class PipeTestCase(unittest.TestCase):
         self.assertEqual(sink[2], SOURCE_DATA[2])
         self.assertEqual(sink[3], SOURCE_DATA[3])
 
+    def testFilter(self):
+        def fn(line):
+            return line["name"] == "Calvin"
+
+        source = sources.Objects(SOURCE_DATA)
+        sink = source | tubes.JSONSerializer(separators=(',', ':')) \
+                      | tubes.Joined(by=b"\n") \
+                      | tubes.Gzip() \
+                      | tubes.Gunzip() \
+                      | tubes.Split(on=b"\n") \
+                      | tubes.JSONParser() \
+                      | tubes.Filter(fn) \
+                      | sinks.Objects()
+
+        logger.debug("%r", sink)
+        self.assertEqual(sink[0], SOURCE_DATA[3])
+
     def testFailingSink(self):
         results = dict(abort=False, close=False,)
 
