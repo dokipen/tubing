@@ -25,13 +25,10 @@ logger = logging.getLogger('tubing.sources')
 HANDLERS = []
 
 def handle_signals(*signals):
-    print("setting up sig handlers")
     def handle(*args, **kwargs):
-        print("calling handlers {}".format(HANDLERS))
         for handle in HANDLERS:
             handle()
     for sig in signals:
-        print("setting up {}".format(sig))
         signal.signal(sig, handle)
 
 handle_signals(signal.SIGTERM, signal.SIGINT, signal.SIGHUP)
@@ -49,7 +46,6 @@ class MakeSourceFactory(object):
         src = Source(reader)
         if hasattr(reader, 'interrupt'):
             HANDLERS.append(reader.interrupt)
-        print("handlers: %s" % (HANDLERS))
         return src
 
 
@@ -141,7 +137,6 @@ class SocketReader(object):
             return b'', True
 
     def interrupt(self):
-        print("interrupt called")
         self.eof = True
 
 
