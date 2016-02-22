@@ -49,7 +49,7 @@ class MakeSourceFactory(object):
         src = Source(reader)
         if hasattr(reader, 'interrupt'):
             HANDLERS.append(reader.interrupt)
-        print("handlers: {}".format(HANDLERS))
+        print("handlers: %s" % (HANDLERS))
         return src
 
 
@@ -133,7 +133,7 @@ class SocketReader(object):
 
         try:
             data, addr = self.sock.recvfrom(amt)
-            logger.debug("{} >> {}".format(addr, data))
+            logger.debug("%s >> %s" % (addr, data))
             return data, False
         except socket.timeout:
             return b'', False
