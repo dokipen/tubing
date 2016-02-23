@@ -75,13 +75,20 @@ Catalog
 Sources
 ~~~~~~~
 
-+---------+------------------------------------+
-|`Objects`|Takes a `list` of python objects.   |
-+---------+------------------------------------+
-|`File`   |Creates a stream from a file.       |
-+---------+------------------------------------+
-|`Bytes`  |Creates a stream from a byte string.|
-+---------+------------------------------------+
++---------+-----------------------------------------------------+
+|`Objects`|Takes a `list` of python objects.                    |
++---------+-----------------------------------------------------+
+|`File`   |Creates a stream from a file.                        |
++---------+-----------------------------------------------------+
+|`Bytes`  |Takes a byte string.                                 |
++---------+-----------------------------------------------------+
+|`IO`     |Takes an object with a read function.                |
++---------+-----------------------------------------------------+
+|`Socket` |Takes an addr, port and socket() args.              .|
++---------+-----------------------------------------------------+
+|`HTTP`   |Takes an method, url and any args that can be passed |
+|         |to requests library.                                 |
++---------+-----------------------------------------------------+
 
 Tubes
 ~~~~~
@@ -99,6 +106,17 @@ Tubes
 +----------------+-----------------------------------------------------+
 |`Joined`        |Joins a stream of the same type as the `by` argument.|
 +----------------+-----------------------------------------------------+
+|`Tee`           |Takes a sink and passes chunks along apparatus.      |
++----------------+-----------------------------------------------------+
+|`Map`           |Takes a transformer function for single items in     |
+|                |stream.                                              |
++----------------+-----------------------------------------------------+
+|`Filter`        |Takes a filter test callback and only forwards items |
+|                |that pass.                                           |
++----------------+-----------------------------------------------------+
+|`ChunkMap`      |Takes a transformer function for batch of stream     |
+|                |items.                                               |
++----------------+-----------------------------------------------------+
 |`Debugger`      |Proxies stream, writing each chunk to the            |
 |                |`tubing.tubes` debugger with level DEBUG.            |
 +----------------+-----------------------------------------------------+
@@ -107,9 +125,13 @@ Sinks
 ~~~~~
 
 +----------+----------------------------------------------------------------+
+|`Objects` |A list that stores all passed items to self.                    |
++----------+----------------------------------------------------------------+
 |`Bytes`   |Saves each chunk self.results.                                  |
 +----------+----------------------------------------------------------------+
 |`File`    |Writes each chunk to a file.                                    |
++----------+----------------------------------------------------------------+
+|`HTTPPost`|Writes data via HTTPPost.                                       |
 +----------+----------------------------------------------------------------+
 |`Debugger`|Writes each chunk to the tubing.tubes debugger with level DEBUG.|
 +----------+----------------------------------------------------------------+
@@ -117,14 +139,14 @@ Sinks
 Extensions
 ~~~~~~~~~~
 
-+------------------------+-----------------------------------------------+
-|`s3.S3Source`           |Create stream from an S3 object.               |
-+------------------------+-----------------------------------------------+
-|`s3.S3Sink`             |Stream data to S3 object.                      |
-+------------------------+-----------------------------------------------+
-|`elasticsearch.BulkSink`|Stream `elasticsearch.DocUpdate` objects to the|
-|                        |elasticsearch _bulk endpoint.                  |
-+------------------------+-----------------------------------------------+
++-------------------------------------+-----------------------------------------------+
+|`s3.S3Source`                        |Create stream from an S3 object.               |
++-------------------------------------+-----------------------------------------------+
+|`s3.S3Sink`                          |Stream data to S3 object.                      |
++-------------------------------------+-----------------------------------------------+
+|`elasticsearch.BulkSink`             |Stream `elasticsearch.DocUpdate` objects to the|
+|                                     |elasticsearch _bulk endpoint.                  |
++-------------------------------------+-----------------------------------------------+
 
 Sources
 -------
