@@ -6,6 +6,8 @@
 Welcome to Tubing's documentation!
 ==================================
 
+.. include:: ../README.rst
+
 Contents:
 
 .. toctree::
