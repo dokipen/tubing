@@ -99,7 +99,7 @@ class TransformerTubeWorker(object):
         """
         buffer_len even if buffer is None.
         """
-        return self.buffer and len(list(self.buffer)) or 0
+        return self.buffer and len(self.buffer) or 0
 
     def read(self, amt=None):
         """
@@ -363,7 +363,7 @@ class FilterTransformer(object):
         self.fn = fn
 
     def transform(self, chunk):
-        return filter(self.fn, chunk)
+        return list(filter(self.fn, chunk))
 
 
 Filter = MakeTransformerTubeFactory(FilterTransformer)
