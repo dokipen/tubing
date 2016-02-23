@@ -6,7 +6,7 @@ Irish.  j/k. Really, they are:
  - noble users who want to extend tubing to their own devices.
  - royal users want to contribute to tubing.
 
-We are socialists, so we want to take care of the plebes, first and formost.
+We are socialists, so we want to take care of the plebes, first and foremost.
 They are also the easiest to satisfy. For them, we have tubes. Tubes are easy
 to use and understand.
 
@@ -27,25 +27,25 @@ Tubes
 =====
 
 The easiest way to extend tubing is to create a Transformer, and use MakeTransformerTubeFactory
-to turn it into a Tube. A Transformer has the following iterface::
+to turn it into a Tube. A Transformer has the following interface::
 
     class Transformer(object):
         def transform(self, chunk):
             return new_chunk
 
-    NewTube = MakeTrasformerTubeFactory(Transformer)
+    NewTube = MakeTransformerTubeFactory(Transformer)
 
 A chunk is an iterable of whatever type of stream we are working on, whether it
-be bytes, unicode characters, strings or python objects.  We can index it,
+be bytes, Unicode characters, strings or python objects.  We can index it,
 slice it, or iterate over it. `transform` simple takes a chunk, and makes a new
 chunk out of it. `MakeTransformerTubeFactory` will take care of all the dirty
 work. Transformers are enough for most tasks, but if you need to do something
 more complex, you may need to go deeper.
 
 .. image:: http://i.imgur.com/DyPouyL.png
-    alt: Leonardo Decaprio
+    alt: Leonardo DiCaprio
 
-First let's describe how tubes work in more detail. Here's the Tube iterface::
+First let's describe how tubes work in more detail. Here's the Tube interface::
 
     class TubeFactory(object):
         # This is what we export, and what is called when users create a tube.
@@ -67,17 +67,17 @@ First let's describe how tubes work in more detail. Here's the Tube iterface::
             return tw
 
     class TubeWorker(object):
-        def tube(self, reciever):
-            # reciever is they guy who will call our `read` method. Either
+        def tube(self, receiver):
+            # receiver is they guy who will call our `read` method. Either
             # another Tube or a Sink.
-            return reciever.receive(self)
+            return receiver.receive(self)
 
         def __or__(self, *args, **kwargs):
             # Our reason for existing.
             return self.tube(*args, **kwargs)
 
         def read(self, amt=None):
-            # our reciever will call this guy. We return a tuple here of
+            # our receiver will call this guy. We return a tuple here of
             # `chunk, eof`.  We should return a chunk of len amt of whatever
             # type of object we produce. If we've exhausted our upstream
             # source, then we should return True as the second element of our
@@ -96,10 +96,10 @@ it gets a source, it will hand off all of it's duties to a TubeWorker.
 
 A TubeWorker is ready to read from it's source, but it doesn't. TubeWorkers are
 pretty lazy and need someone else to tell them what to do. That's where a receiver
-comes in hand. A reciever can be another Tube, or a Sink.  If it's another Tube,
+comes in hand. A receiver can be another Tube, or a Sink.  If it's another Tube,
 you know the drill. It's just another lazy guy that will only tell his source to
 read when his boss tells him to read. Ultimately, the only guy who wants to do
-any work is the Sink. At the end of the chain, a sink's recieve function will
+any work is the Sink. At the end of the chain, a sink's receive function will
 be called, and he'll get everyone to work.
 
 Technically, we could split the TubeWorker interface into two parts, but it's not
@@ -128,12 +128,12 @@ Let's call it an apparatus.
 MakeTransformerTubeFactory
 --------------------------
 
-So how does MakeTransformerTubeFactoryFactory turn a Transformer into a
-TubeFactory?  MakeTransformerTubeFactoryFactory is a utility that creates a
+So how does MakeTransformerTubeFactory turn a Transformer into a
+TubeFactory?  MakeTransformerTubeFactory is a utility that creates a
 function that wrap a transformer in a tube. Sort of complicate, eh? I'm sorry
 about that, but let's see if we can break it down.
 
-MakeTransformerTubeFactoryFactory returns a partial function out of the TransformerTube
+MakeTransformerTubeFactory returns a partial function out of the TransformerTube
 instantiation. For the uninitiated, a partial is just a new version
 of a function with some of the parameters already filled in. So we're currying
 the transformer_cls and the default_chunk_size back to the plebes. They
@@ -141,13 +141,13 @@ can fill in the rest of the details and get back a TransformerTube.
 
 The TransformerTubeWorker is where most of the hard work happens. There's a
 bunch of code related to reading just enough chunks from our source to satisfy
-our reciever. Remeber, Workers are lazy, that's good.
+our receiver. Remember, Workers are lazy, that's good.
 
 default_chunk_size is sort of important, by default it's something like 32k. It's
 the size of the chunks that we request from upstream, in the read function (amt).
 That's great for byte streams(maybe?), but it's not that great for large objects.
 You'll probably want to set it if you are using something other than bytes. It
-can be overriden by plebes, this is just the default if they don't specify it.
+can be overridden by plebes, this is just the default if they don't specify it.
 Remember, we should be making the plebes job easy, so try and be a nice noble
 and set it to something sensible.
 

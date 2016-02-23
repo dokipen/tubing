@@ -39,7 +39,7 @@ class TransformerTube(object):
         self.args = args
         self.kwargs = kwargs
 
-    def recieve(self, source):
+    def receive(self, source):
         transformer = self.transformer_cls(*self.args, **self.kwargs)
         return TransformerTubeWorker(source, self.chunk_size, transformer)
 
@@ -62,7 +62,7 @@ class TransformerTubeWorker(object):
         return self.tube(other)
 
     def tube(self, other):
-        return other.recieve(self)
+        return other.receive(self)
 
     def read_complete(self, amt):
         """

@@ -21,12 +21,12 @@
     :target: http://tubing.readthedocs.org/en/latest
 
 Tubing is a Python I/O library.  What makes tubing so freakin' cool is the
-gross abuse of the bitwise OR operator (|). Have you ever been writing python
+gross abuse of the bit-wise OR operator (|). Have you ever been writing python
 code and thought to yourself, "Man, this is great, but I really wish it was a
-little more like bash." Welp, we've made python a little more like bash.If you
-are a super lame nerd-kid, you can replace any of the bitwise ORs with the
+little more like bash." Whelp, we've made python a little more like bash.If you
+are a super lame nerd-kid, you can replace any of the bit-wise ORs with the
 tube() function and pray we don't overload any other operators in future
-versions. If you do avoid the bitwise OR, we don't know if we want to hang out
+versions. If you do avoid the bit-wise OR, we don't know if we want to hang out
 with you.
 
 Tubing is pretty bare-bones at the moment. We've tried to make it easy to add
@@ -174,7 +174,7 @@ Now it can be used in a apparatus!
          | sinks.Bytes()
 
     print(sinks.result)
-    # Output: goodby cruel world!
+    # Output: goodbye cruel world!
 
 Tubes
 -----

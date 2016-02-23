@@ -66,7 +66,7 @@ class Source(object):
         return self.pipe(other)
 
     def pipe(self, other):
-        return other.recieve(self)
+        return other.receive(self)
 
     def __str__(self):
         return "<tubing.sources.Source(%s)>" % (self.source)

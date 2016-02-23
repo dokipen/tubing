@@ -55,7 +55,7 @@ class Sink(object):
     def abort(self):
         hasattr(self.writer, 'abort') and self.writer.abort()
 
-    def recieve(self, source):
+    def receive(self, source):
         SinkRunner(source, self, self.chunk_size)()
         return self.writer
 

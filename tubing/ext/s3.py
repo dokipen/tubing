@@ -43,7 +43,7 @@ class S3SinkWriter(object):  # pragma: no cover
 
     def __init__(self, bucket, key):
         """
-        Initiate the multipart upload.
+        Initiate the multi-part upload.
         """
         self.s3 = boto3.client('s3')
         self.bucket = bucket
