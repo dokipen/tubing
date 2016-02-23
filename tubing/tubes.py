@@ -99,7 +99,7 @@ class TransformerTubeWorker(object):
         """
         buffer_len even if buffer is None.
         """
-        return self.buffer and len(self.buffer) or 0
+        return self.buffer and len(list(self.buffer)) or 0
 
     def read(self, amt=None):
         """
