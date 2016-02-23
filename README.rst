@@ -144,7 +144,7 @@ Extensions
 +-------------------------------------+-----------------------------------------------+
 |`s3.S3Source`                        |Create stream from an S3 object.               |
 +-------------------------------------+-----------------------------------------------+
-|`s3.S3Sink`                          |Stream data to S3 object.                      |
+|`s3.MultipartUploader`               |Stream data to S3 object.                      |
 +-------------------------------------+-----------------------------------------------+
 |`elasticsearch.BulkSink`             |Stream `elasticsearch.DocUpdate` objects to the|
 |                                     |elasticsearch _bulk endpoint.                  |
