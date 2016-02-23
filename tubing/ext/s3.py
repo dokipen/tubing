@@ -70,7 +70,7 @@ class S3SinkWriter(object):  # pragma: no cover
         """
         Upload a part.
         """
-        logger.debug("Posting " + self.part_number)
+        logger.debug("Posting %s" % (self.part_number))
         part = self.s3.upload_part(
             Bucket=self.bucket,
             Key=self.key,
