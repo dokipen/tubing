@@ -71,7 +71,7 @@ class MultipartWriter(object):  # pragma: no cover
         Upload a part.
         """
         if len(chunk):
-            logger.error("Posting %s [%d]" % (self.part_number, len(chunk)))
+            logger.debug("Posting %s [%d]" % (self.part_number, len(chunk)))
             part = self.s3.upload_part(
                 Bucket=self.bucket,
                 Key=self.key,
