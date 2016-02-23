@@ -86,12 +86,15 @@ class MultipartWriter(object):  # pragma: no cover
         """
         Finalize upload.
         """
-        self.s3.complete_multipart_upload(
-            Bucket=self.bucket,
-            Key=self.key,
-            UploadId=self.upload_id,
-            MultipartUpload=self.part_info,
-        )
+        if self.part_number > 1:
+            self.s3.complete_multipart_upload(
+                Bucket=self.bucket,
+                Key=self.key,
+                UploadId=self.upload_id,
+                MultipartUpload=self.part_info,
+            )
+        else:
+            self.abort()
 
     def abort(self):
         """
