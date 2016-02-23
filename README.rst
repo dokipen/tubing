@@ -26,8 +26,7 @@ code and thought to yourself, "Man, this is great, but I really wish it was a
 little more like bash." Whelp, we've made python a little more like bash.If you
 are a super lame nerd-kid, you can replace any of the bit-wise ORs with the
 tube() function and pray we don't overload any other operators in future
-versions. If you do avoid the bit-wise OR, we don't know if we want to hang out
-with you.
+versions.
 
 Tubing is pretty bare-bones at the moment. We've tried to make it easy to add
 your own functionality. Hopefully you find it not all that unpleasant. There
