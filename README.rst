@@ -264,10 +264,3 @@ Well.. I'm this far, let's just push through.
     #{"number": 9}
     #{"number": 8}
     #That's all folks!
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
