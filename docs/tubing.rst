@@ -1,5 +1,9 @@
-tubing package
-==============
+API Docs
+========
+
+.. automodule:: tubing
+    :members:
+    :show-inheritance:
 
 Subpackages
 -----------
@@ -36,13 +40,5 @@ tubing.tubes module
 -------------------
 
 .. automodule:: tubing.tubes
-    :members:
-    :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: tubing
     :members:
     :show-inheritance:

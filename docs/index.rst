@@ -8,17 +8,7 @@ Welcome to Tubing's documentation!
 
 .. include:: ../README.rst
 
-Contents:
-
 .. toctree::
-   :maxdepth: 2
+   :caption: Table of Contents
 
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
+    API Docs <tubing>
