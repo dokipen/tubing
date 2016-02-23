@@ -127,6 +127,42 @@ class FileWriter(object):
 File = MakeSinkFactory(FileWriter)
 
 
+class HTTPPost(object):
+    """
+    HTTPPost doesn't support the write method, and therefore can not be used
+    with tubes.Tee.
+    """
+    def __init__(self, url, username=None, password=None, chunk_size=2**32,
+                 chunks_per_post=2**10, response_handler=lambda _: None):
+        self.url = url
+        if username:
+            self.auth = (username, password)
+        else:
+            self.auth = None
+        self.chunk_size = chunk_size
+        self.chunks_per_post = chunks_per_post
+        self.response_handler = response_handler
+        self.eof = False
+
+    def gen(self):
+        """
+        We have to do this goofy shit because requests.post doesn't give
+        access to the socket directly. In order to stream, we need to pass
+        a generator object to requests.
+        """
+        for _ in range(self.chunks_per_post):
+            r, self.eof = self.source.read(self.chunk_size)
+            yield r
+            if self.eof:
+                return
+
+    def receive(self, other):
+        self.source = other
+        while not self.eof:
+            r = requests.post(self.url, data=self.gen(), auth=self.auth)
+            self.response_handler(r)
+
+
 class DebugPrinter(object):
 
     def write(self, chunk):
@@ -140,80 +176,3 @@ class DebugPrinter(object):
 
 
 Debugger = MakeSinkFactory(DebugPrinter)
-
-
-class HTTPPostWorker(object):
-    """
-    Expects a stream of byte strings.
-    """
-
-    def __init__(
-        self,
-        url,
-        username=None,
-        password=None,
-        chunk_size=2**4,
-        chunks_per_post=2**10,
-        response_handler=lambda _: None,
-    ):
-        self.url = url
-        self.auth = None
-        if username and password:
-            self.auth = username, password
-        self.chunk_size = chunk_size
-        self.per_post = chunks_per_post
-        self.response_handler = response_handler
-
-    def __call__(self, source):
-        posts = GeneratorGeneratorSink(
-            chunk_size=self.chunk_size,
-            per_gen=self.per_post,
-            flatten=True,
-            source=source
-        )
-        for post in posts:
-            self.response_handler(
-                requests.post(
-                    self.url,
-                    data=post,
-                    auth=self.auth
-                )
-            )
-
-
-def GeneratorSink(chunk_size, source):
-    eof = False
-    while not eof:
-        r, eof = source.read(chunk_size)
-        yield r
-
-
-def Generator(chunk_size=2**10):
-    return functools.partial(GeneratorSink, chunk_size)
-
-
-def GeneratorGeneratorSink(chunk_size, per_gen, flatten, source):
-    d = dict(eof=False)
-
-    def gen():
-        i = per_gen
-        while not d['eof'] and i:
-            chunk, d['eof'] = source.read(chunk_size)
-            logger.debug("%r" % (chunk))
-            if flatten:
-                for line in chunk:
-                    yield line
-            else:
-                yield chunk
-            i -= 1
-
-    while not d['eof']:
-        yield gen()
-
-    logger.debug("all done")
-
-
-def GeneratorGenerator(chunk_size=2**10, per_gen=2 * 4, flatten=False):
-    return functools.partial(
-        GeneratorGeneratorSink, chunk_size, per_gen, flatten
-    )

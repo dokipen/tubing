@@ -19,6 +19,7 @@ import logging
 import socket
 import signal
 import io
+from requests import Session, Request
 from tubing import compat
 
 logger = logging.getLogger('tubing.sources')
@@ -170,3 +171,20 @@ class IOReader(object):
             return b'', True
 
 IO = MakeSourceFactory(IOReader)
+
+
+class HTTPReader(object):
+    def __init__(self, method, url, *args, **kwargs):
+        s = Session()
+        s.stream = True
+        r = Request(method, url, *args, **kwargs)
+        self.stream = s.send(r.prepare()).raw
+
+    def read(self, amt=None):
+        r = self.stream.read(amt)
+        if r:
+            return r, False
+        else:
+            return b'', True
+
+HTTP = MakeSourceFactory(HTTPReader)
