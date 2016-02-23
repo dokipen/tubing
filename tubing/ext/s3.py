@@ -36,9 +36,12 @@ class S3Reader(object):  # pragma: no cover
 S3Source = sources.MakeSourceFactory(S3Reader)
 
 
-class S3SinkWriter(object):  # pragma: no cover
+class S3MultipartWriter(object):  # pragma: no cover
     """
     Send file to S3. Expects AWS environmental variables to be set.
+    If the file is too small, this will fail. Have your apparatus
+    write to a Bytes sink instead, and use client.put_object(Body=sink)
+    after the tubes have executed.
     """
 
     def __init__(self, bucket, key):
@@ -103,4 +106,4 @@ class S3SinkWriter(object):  # pragma: no cover
         )
 
 
-S3Sink = sinks.MakeSinkFactory(S3SinkWriter)
+S3Multipart = sinks.MakeSinkFactory(S3MultipartWriter)
