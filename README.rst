@@ -68,7 +68,7 @@ Then in our old friend bash.
     {"alignment": "good", "birthdate": "08/03/1977", "name": "Tom Brady"}
     $
 
-You can find more documentation on `pythonhosted<http://pythonhosted.org/tubing>`_
+You can find more documentation on `readthedocs <https://tubing.readthedocs.org/>`_
 
 Catalog
 -------

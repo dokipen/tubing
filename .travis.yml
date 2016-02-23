@@ -20,7 +20,7 @@ deploy:
   user: Robert.Corsaro
   password:
     secure: brqUGKoMpA1UeKMoqgtdvsaCy4K2LG4blOaiJm6e5VbruSasYofdZcGObLC905qbW/fId2mRG96FrVErz0bQrnx6c+4ghkB+cFKujr55VG3QfHcr5gZBq/DPgYlY8ZteWm1333ieB1ZSEbsllHsRODJF4xjEpV2OPhR0C3MoxA303GW3ejlg0lk98Ny3T8j3hFMqp4ycV+kUNLylPtKlFTsvcOmRmZ3hBuA5bA+1k/Xdk3/3t190PMkWyzIrMGzCBB6ZyGqWsG8aj04wfUWdZYhkU38LuSx7ZetMxS/H2NkWpVDrpGGKPCHQo6Fd8idS4Ozi/7R5e/16QRNoJLYUjJex78HnP6Eq9rO0Ayi+SjoRC8YPfliXcOyyatJztwp9M5qQTlcbI0ps6OTYH4JbTB23tzoUHKXaO3JYagcPLbOX5wLd5kwGs093yZ4Tc7EKc76o0gjDqARtFlZl/QX6mhycYYcrFl9A6Q+4hWfx7+Hppppl+5wzuXodafnyudE/LAUdiL1bbANG5soJutJCUcJs/4BC+JOhCQqFBO+hYAI+oNYAsm4v9YFe+U7h7EjgFrC9szY/TsugtGLPNi75jgbHudGnXE8E45KxAc7mFroMCFBwxm2KS637g7pYolfSCuGoFFWYuqs+s/c7peZnJXEqjkp5V3OfpdVqyyiluRo=
-  distributions: "sdist bdist_wheel upload_docs"
+  distributions: "sdist bdist_wheel"
   on:
     repo: dokipen/tubing
     branch: master
