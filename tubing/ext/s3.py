@@ -94,6 +94,11 @@ class MultipartWriter(object):  # pragma: no cover
                 MultipartUpload=self.part_info,
             )
         else:
+            logger.warn("s3.MultipartUploader [%s/%s] got empty " \
+                        "set, no file created" % (
+                self.bucket,
+                self.key,
+            ))
             self.abort()
 
     def abort(self):
