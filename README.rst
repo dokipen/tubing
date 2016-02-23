@@ -17,13 +17,15 @@
     :target: https://pypi.python.org/pypi/tubing/
 .. image:: https://img.shields.io/pypi/wheel/tubing.svg
     :target: https://pypi.python.org/pypi/tubing/
+.. image:: https://readthedocs.org/projects/tubing/badge/?version=latest
+    :target: http://tubing.readthedocs.org/en/latest
 
 Tubing is a Python I/O library.  What makes tubing so freakin' cool is the
 gross abuse of the bitwise OR operator (|). Have you ever been writing python
 code and thought to yourself, "Man, this is great, but I really wish it was a
 little more like bash." Welp, we've made python a little more like bash.If you
 are a super lame nerd-kid, you can replace any of the bitwise ORs with the
-pipe() function and pray we don't overload any other operators in future
+tube() function and pray we don't overload any other operators in future
 versions. If you do avoid the bitwise OR, we don't know if we want to hang out
 with you.
 
@@ -66,8 +68,7 @@ Then in our old friend bash.
     {"alignment": "good", "birthdate": "08/03/1977", "name": "Tom Brady"}
     $
 
-We need to seriously think about renaming tubes to tubes.. man, what was I
-thinking?
+You can find more documentation on `pythonhosted<http://pythonhosted.org/tubing>`_
 
 Catalog
 -------
@@ -161,7 +162,7 @@ the loving embrace of MakeSourceFactory.
 
     MySource = sources.MakeSourceFactory(MyReader)
 
-Now it can be used in a pipeline!
+Now it can be used in a apparatus!
 
 .. code-block:: python
 
@@ -178,7 +179,7 @@ Now it can be used in a pipeline!
 Tubes
 -----
 
-Making your own pipe is a lot more fun, trust me. First make a Transformer.
+Making your own tube is a lot more fun, trust me. First make a Transformer.
 
 .. code-block:: python
 
