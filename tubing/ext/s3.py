@@ -36,12 +36,9 @@ class S3Reader(object):  # pragma: no cover
 S3Source = sources.MakeSourceFactory(S3Reader)
 
 
-class S3MultipartWriter(object):  # pragma: no cover
+class MultipartWriter(object):  # pragma: no cover
     """
     Send file to S3. Expects AWS environmental variables to be set.
-    If the file is too small, this will fail. Have your apparatus
-    write to a Bytes sink instead, and use client.put_object(Body=sink)
-    after the tubes have executed.
     """
 
     def __init__(self, bucket, key):
@@ -73,16 +70,17 @@ class S3MultipartWriter(object):  # pragma: no cover
         """
         Upload a part.
         """
-        logger.debug("Posting %s" % (self.part_number))
-        part = self.s3.upload_part(
-            Bucket=self.bucket,
-            Key=self.key,
-            PartNumber=self.part_number,
-            UploadId=self.upload_id,
-            Body=chunk,
-        )
-        self.track_part(self.part_number, part)
-        self.part_number += 1
+        if len(chunk):
+            logger.error("Posting %s [%d]" % (self.part_number, len(chunk)))
+            part = self.s3.upload_part(
+                Bucket=self.bucket,
+                Key=self.key,
+                PartNumber=self.part_number,
+                UploadId=self.upload_id,
+                Body=chunk,
+            )
+            self.track_part(self.part_number, part)
+            self.part_number += 1
 
     def close(self):
         """
@@ -106,4 +104,4 @@ class S3MultipartWriter(object):  # pragma: no cover
         )
 
 
-S3Multipart = sinks.MakeSinkFactory(S3MultipartWriter)
+MultipartUpload = sinks.MakeSinkFactory(MultipartWriter, default_chunk_size=2**33)
