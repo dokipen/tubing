@@ -48,7 +48,7 @@ class MultipartWriter(object):  # pragma: no cover
         self.s3 = boto3.client('s3')
         self.bucket = bucket
         self.key = key
-        logger.debug("Creating upload for %s %s" % (bucket, key))
+        logger.debug("Creating upload for %s %s", bucket, key)
         upload = self.s3.create_multipart_upload(Bucket=bucket, Key=key)
         self.upload_id = upload["UploadId"]
         # start with 1
@@ -71,7 +71,7 @@ class MultipartWriter(object):  # pragma: no cover
         Upload a part.
         """
         if len(chunk):
-            logger.debug("Posting %s [%d]" % (self.part_number, len(chunk)))
+            logger.debug("Posting %s [%d]", self.part_number, len(chunk))
             part = self.s3.upload_part(
                 Bucket=self.bucket,
                 Key=self.key,
@@ -95,10 +95,10 @@ class MultipartWriter(object):  # pragma: no cover
             )
         else:
             logger.warn("s3.MultipartUploader [%s/%s] got empty " \
-                        "set, no file created" % (
+                        "set, no file created",
                 self.bucket,
                 self.key,
-            ))
+            )
             self.abort()
 
     def abort(self):

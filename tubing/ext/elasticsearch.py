@@ -3,7 +3,6 @@ from __future__ import print_function
 Elasticsearch Extension.
 """
 import json
-import requests
 import logging
 from tubing import sinks, tubes
 
@@ -109,7 +108,7 @@ def BulkUpdate(
                     "errors in response: '%s'" % (resp.text)
                 )
         except:
-            logger.exception("%s %s" % (resp, resp.text))
+            logger.exception("%s %s", resp, resp.text)
             if fail_on_error:
                 raise
 

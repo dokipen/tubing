@@ -1,6 +1,10 @@
 from __future__ import print_function
 """
-Tubing sinks are targets for streams of data. To make your own sink, define a Writer with a write(chunk) and optional close() and abort() functions and pass it to MakeSink. if present, close() will be called on the upstream EOF and abort() will be called on any exception in the pipeline. Here's an example::
+Tubing sinks are targets for streams of data. To make your own sink,
+define a Writer with a write(chunk) and optional close() and abort()
+functions and pass it to MakeSink. if present, close() will be
+called on the upstream EOF and abort() will be called on any
+exception in the pipeline. Here's an example::
 
     class MyWriter(object):
         def write(self, chunk):
@@ -25,7 +29,7 @@ class SinkRunner(object):
 
     def __call__(self):
         try:
-            logger.debug("reading %s" % (self.source))
+            logger.debug("reading %s", self.source)
             chunk, eof = self.source.read(self.chunk_size)
             self.sink.write(chunk)
             while not eof:

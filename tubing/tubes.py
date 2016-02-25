@@ -152,7 +152,7 @@ class TubeIterator(object):
             raise StopIteration
 
         r, self.eof = self.tube.read(self.chunk_size)
-        logger.debug("iter >> %s" % (r))
+        logger.debug("iter >> %s", r)
         return r
 
     def __next__(self):

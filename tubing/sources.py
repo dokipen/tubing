@@ -131,7 +131,7 @@ class SocketReader(object):
 
         try:
             data, addr = self.sock.recvfrom(amt)
-            logger.debug("%s >> %s" % (addr, data))
+            logger.debug("%s >> %s", addr, data)
             return data, False
         except socket.timeout:
             return b'', False
