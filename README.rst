@@ -1,24 +1,27 @@
 .. image:: https://imgur.com/Q9Lv0xo.png
-     :target: https://github.com/dokipen/tubing
+   :target: https://github.com/dokipen/tubing
 
 ======
 
 .. image:: https://travis-ci.org/dokipen/tubing.svg?branch=master
-    :target: https://travis-ci.org/dokipen/tubing/
+   :target: https://travis-ci.org/dokipen/tubing/
 .. image:: https://coveralls.io/repos/github/dokipen/tubing/badge.svg?branch=master
-    :target: https://coveralls.io/github/dokipen/tubing?branch=master
+   :target: https://coveralls.io/github/dokipen/tubing?branch=master
 .. image:: https://img.shields.io/pypi/v/tubing.svg
-    :target: https://pypi.python.org/pypi/tubing/
+   :target: https://pypi.python.org/pypi/tubing/
 .. image:: https://img.shields.io/pypi/pyversions/tubing.svg
-    :target: https://pypi.python.org/pypi/tubing/
+   :target: https://pypi.python.org/pypi/tubing/
 .. image:: https://img.shields.io/pypi/dd/tubing.svg
-    :target: https://pypi.python.org/pypi/tubing/
+   :target: https://pypi.python.org/pypi/tubing/
 .. image:: https://img.shields.io/pypi/l/tubing.svg
-    :target: https://pypi.python.org/pypi/tubing/
+   :target: https://pypi.python.org/pypi/tubing/
 .. image:: https://img.shields.io/pypi/wheel/tubing.svg
-    :target: https://pypi.python.org/pypi/tubing/
+   :target: https://pypi.python.org/pypi/tubing/
 .. image:: https://readthedocs.org/projects/tubing/badge/?version=latest
-    :target: http://tubing.readthedocs.org/en/latest
+   :target: http://tubing.readthedocs.org/en/latest
+.. image:: https://landscape.io/github/dokipen/tubing/master/landscape.svg?style=flat
+   :target: https://landscape.io/github/dokipen/tubing/master
+   :alt: Code Health
 
 Tubing is a Python I/O library.  What makes tubing so freakin' cool is the
 gross abuse of the bit-wise OR operator (|). Have you ever been writing python
