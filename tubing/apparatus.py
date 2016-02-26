@@ -12,7 +12,7 @@ class Apparatus(object):
         tail returns the last apparatii on the aparatus.
         """
         if self.sink:
-            return sink
+            return self.sink
 
         elif self.tubes:
             return self.tubes[-1]

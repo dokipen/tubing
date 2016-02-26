@@ -108,7 +108,6 @@ class BytesWriter(io.BytesIO):
     """
 
     def __init__(self, *args, **kwargs):
-        self.result = None
         super(BytesWriter, self).__init__(*args, **kwargs)
 
     def close(self):
