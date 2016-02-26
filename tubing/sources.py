@@ -19,8 +19,9 @@ import logging
 import socket
 import signal
 import io
+import sys
 from requests import Session, Request
-from tubing import compat
+from tubing import compat, apparatus
 
 logger = logging.getLogger('tubing.sources')
 
@@ -28,8 +29,15 @@ HANDLERS = []
 
 def handle_signals(*signals):
     def handle(*args, **kwargs):
-        for handle in HANDLERS:
-            handle()
+        try:
+            for handle in HANDLERS:
+                handle()
+        except:
+            logger.exception("Signal handlers failed")
+            sys.exit(1)
+
+        sys.exit(130)
+
     for sig in signals:
         signal.signal(sig, handle)
 
@@ -67,7 +75,7 @@ class Source(object):
         return self.pipe(other)
 
     def pipe(self, other):
-        return other.receive(self)
+        return other.receive(apparatus.Apparatus(self))
 
     def __str__(self):
         return "<tubing.sources.Source(%s)>" % (self.source)

@@ -39,9 +39,9 @@ class TransformerTube(object):
         self.args = args
         self.kwargs = kwargs
 
-    def receive(self, source):
+    def receive(self, apparatus):
         transformer = self.transformer_cls(*self.args, **self.kwargs)
-        return TransformerTubeWorker(source, self.chunk_size, transformer)
+        return TransformerTubeWorker(apparatus, self.chunk_size, transformer)
 
 
 class TransformerTubeWorker(object):
@@ -51,18 +51,21 @@ class TransformerTubeWorker(object):
     optionally close() and abort().
     """
 
-    def __init__(self, source, chunk_size, transformer):
-        self.source = source
+    def __init__(self, apparatus, chunk_size, transformer):
+        self.apparatus = apparatus
+        self.source = self.apparatus.tail()
+        self.apparatus.tubes.append(self)
         self.chunk_size = chunk_size
         self.transformer = transformer
         self.eof = False
         self.buffer = None
+        self.result = None
 
     def __or__(self, other):
         return self.tube(other)
 
     def tube(self, other):
-        return other.receive(self)
+        return other.receive(self.apparatus)
 
     def read_complete(self, amt):
         """
@@ -90,7 +93,7 @@ class TransformerTubeWorker(object):
         """
         append to the buffer, creating it if it doesn't exist.
         """
-        if self.buffer:
+        if self.buffer and chunk:
             self.buffer += chunk
         else:
             self.buffer = chunk
@@ -114,6 +117,8 @@ class TransformerTubeWorker(object):
                         self.append(outchunk)
                 if self.eof and hasattr(self.transformer, 'close'):
                     self.append(self.transformer.close())
+                    if hasattr(self.transformer, 'result'):
+                        self.result = self.transformer.result
 
             if self.eof and (not amt or self.buffer_len() <= amt):
                 # We've written everything, we're done
@@ -345,10 +350,14 @@ class TeeTransformer(object):
     """
     def __init__(self, sink):
         self.sink = sink
+        self.result = None
 
     def transform(self, chunk):
         self.sink.write(chunk)
         return chunk
+
+    def close(self):
+        self.result = self.sink.result()
 
 
 Tee = MakeTransformerTubeFactory(TeeTransformer)

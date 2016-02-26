@@ -16,14 +16,17 @@ import requests
 import logging
 import io
 import functools
+import hashlib
 
 logger = logging.getLogger('tubing.sinks')
 
 
 class SinkRunner(object):
 
-    def __init__(self, source, sink, chunk_size):
-        self.source = source
+    def __init__(self, apparatus, sink, chunk_size):
+        self.apparatus = apparatus
+        self.source = self.apparatus.tail()
+        self.apparatus.sink = self
         self.sink = sink
         self.chunk_size = chunk_size
 
@@ -43,6 +46,7 @@ class SinkRunner(object):
             raise
 
 
+
 class Sink(object):
 
     def __init__(self, writer, chunk_size=2**16):
@@ -59,9 +63,15 @@ class Sink(object):
     def abort(self):
         hasattr(self.writer, 'abort') and self.writer.abort()
 
-    def receive(self, source):
-        SinkRunner(source, self, self.chunk_size)()
+    def result(self):
+        if hasattr(self.writer, 'result'):
+            return self.writer.result()
         return self.writer
+
+    def receive(self, apparatus):
+        SinkRunner(apparatus, self, self.chunk_size)()
+        apparatus.result = self.result()
+        return apparatus
 
 
 def SinkFactory(writer_cls, default_chunk_size=2**16, *args, **kwargs):
@@ -102,11 +112,13 @@ class BytesWriter(io.BytesIO):
         super(BytesWriter, self).__init__(*args, **kwargs)
 
     def close(self):
-        self.result = self.getvalue()
         super(BytesWriter, self).close()
 
     def abort(self):
         super(BytesWriter, self).close()
+
+    def result(self):
+        return self.getvalue()
 
 
 Bytes = MakeSinkFactory(BytesWriter, 2**16)
@@ -160,11 +172,15 @@ class HTTPPost(object):
             if self.eof:
                 return
 
-    def receive(self, other):
-        self.source = other
+    def receive(self, apparatus):
+        self.source = apparatus.tail()
+        apparatus.sink = self
+        apparatus.result = []
         while not self.eof:
             r = requests.post(self.url, data=self.gen(), auth=self.auth)
             self.response_handler(r)
+            apparatus.result.append(r)
+        return apparatus
 
 
 class DebugPrinter(object):
@@ -180,3 +196,17 @@ class DebugPrinter(object):
 
 
 Debugger = MakeSinkFactory(DebugPrinter)
+
+
+class HashPrinter(object):
+    def __init__(self, algorithm):
+        self.hsh = hashlib.new(algorithm)
+
+    def write(self, chunk):
+        self.hsh.update(chunk)
+
+    def result(self):
+        return self.hsh
+
+
+Hash = MakeSinkFactory(HashPrinter)

@@ -28,26 +28,27 @@ class PipeTestCase(unittest.TestCase):
 
     def testPipe(self):
         source = sources.Objects(SOURCE_DATA)
-        sink = source | tubes.JSONSerializer(separators=(',', ':')) \
+        apparatus = source | tubes.JSONSerializer(separators=(',', ':')) \
                       | tubes.Joined(by=b"\n") \
                       | tubes.Gzip() \
                       | tubes.Gunzip() \
                       | tubes.Split(on=b"\n") \
                       | tubes.JSONParser() \
                       | sinks.Objects()
+        result = apparatus.result
 
-        logger.debug("%r", sink)
-        self.assertEqual(sink[0], SOURCE_DATA[0])
-        self.assertEqual(sink[1], SOURCE_DATA[1])
-        self.assertEqual(sink[2], SOURCE_DATA[2])
-        self.assertEqual(sink[3], SOURCE_DATA[3])
+        logger.debug("%r", result)
+        self.assertEqual(result[0], SOURCE_DATA[0])
+        self.assertEqual(result[1], SOURCE_DATA[1])
+        self.assertEqual(result[2], SOURCE_DATA[2])
+        self.assertEqual(result[3], SOURCE_DATA[3])
 
     def testFilter(self):
         def fn(line):
             return line["name"] == "Calvin"
 
         source = sources.Objects(SOURCE_DATA)
-        sink = source | tubes.JSONSerializer(separators=(',', ':')) \
+        apparatus = source | tubes.JSONSerializer(separators=(',', ':')) \
                       | tubes.Joined(by=b"\n") \
                       | tubes.Gzip() \
                       | tubes.Gunzip() \
@@ -56,8 +57,9 @@ class PipeTestCase(unittest.TestCase):
                       | tubes.Filter(fn) \
                       | sinks.Objects()
 
-        logger.debug("%r", sink)
-        self.assertEqual(sink[0], SOURCE_DATA[3])
+        result = apparatus.result
+        logger.debug("%r", result)
+        self.assertEqual(result[0], SOURCE_DATA[3])
 
     def testFailingSink(self):
         results = dict(abort=False, close=False,)
