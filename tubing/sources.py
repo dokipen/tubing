@@ -48,12 +48,18 @@ class MakeSourceFactory(object):
     MakeSourceFactory takes a reader object and returns a Source factory.
     """
 
-    def __init__(self, reader_cls):
+    def __init__(self, reader_cls, default_chunk_size=2**16):
         self.reader_cls = reader_cls
+        self.default_chunk_size = default_chunk_size
 
     def __call__(self, *args, **kwargs):
+        chunk_size = self.default_chunk_size
+        if kwargs.get("chunk_size"):
+            chunk_size = kwargs["chunk_size"]
+            del kwargs["chunk_size"]
+
         reader = self.reader_cls(*args, **kwargs)
-        src = Source(reader)
+        src = Source(reader, chunk_size)
         if hasattr(reader, 'interrupt'):
             HANDLERS.append(reader.interrupt)
         return src
@@ -65,11 +71,13 @@ class Source(object):
     Source is a wrapper for Readers that allows piping.
     """
 
-    def __init__(self, source):
-        self.source = source
+    def __init__(self, reader, chunk_size):
+        self.reader = reader
+        self.chunk_size = chunk_size
 
-    def read(self, amt):
-        return self.source.read(amt)
+    def read(self):
+        logger.debug("[%s] Reading %s", self.reader, self.chunk_size)
+        return self.reader.read(self.chunk_size)
 
     def __or__(self, other):
         return self.pipe(other)
@@ -78,7 +86,7 @@ class Source(object):
         return other.receive(apparatus.Apparatus(self))
 
     def __str__(self):
-        return "<tubing.sources.Source(%s)>" % (self.source)
+        return "<tubing.readers.Source(%s)>" % (self.reader)
 
 
 class ObjectReader(object):

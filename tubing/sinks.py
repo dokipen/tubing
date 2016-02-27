@@ -23,20 +23,19 @@ logger = logging.getLogger('tubing.sinks')
 
 class SinkRunner(object):
 
-    def __init__(self, apparatus, sink, chunk_size):
+    def __init__(self, apparatus, sink):
         self.apparatus = apparatus
         self.source = self.apparatus.tail()
         self.apparatus.sink = self
         self.sink = sink
-        self.chunk_size = chunk_size
 
     def __call__(self):
         try:
             logger.debug("reading %s", self.source)
-            chunk, eof = self.source.read(self.chunk_size)
+            chunk, eof = self.source.read()
             self.sink.write(chunk)
             while not eof:
-                chunk, eof = self.source.read(self.chunk_size)
+                chunk, eof = self.source.read()
                 self.sink.write(chunk)
             hasattr(self.sink, 'close') and self.sink.close()
             return self.sink.writer
@@ -49,9 +48,8 @@ class SinkRunner(object):
 
 class Sink(object):
 
-    def __init__(self, writer, chunk_size=2**16):
+    def __init__(self, writer):
         self.writer = writer
-        self.chunk_size = chunk_size
 
     def write(self, chunk):
         self.writer.write(chunk)
@@ -69,24 +67,18 @@ class Sink(object):
         return self.writer
 
     def receive(self, apparatus):
-        SinkRunner(apparatus, self, self.chunk_size)()
+        SinkRunner(apparatus, self)()
         apparatus.result = self.result()
         return apparatus
 
 
-def SinkFactory(writer_cls, default_chunk_size=2**16, *args, **kwargs):
-    if kwargs.get('chunk_size'):
-        chunk_size = kwargs['chunk_size']
-        del kwargs['chunk_size']
-    else:
-        chunk_size = default_chunk_size
-
+def SinkFactory(writer_cls, *args, **kwargs):
     writer = writer_cls(*args, **kwargs)
-    return Sink(writer, chunk_size)
+    return Sink(writer)
 
 
-def MakeSinkFactory(sink_cls, default_chunk_size=2**16):
-    return functools.partial(SinkFactory, sink_cls, default_chunk_size)
+def MakeSinkFactory(sink_cls):
+    return functools.partial(SinkFactory, sink_cls)
 
 
 class ObjectsSink(list):
@@ -98,7 +90,7 @@ class ObjectsSink(list):
         self.extend(objs)
 
 
-Objects = MakeSinkFactory(ObjectsSink, 2**4)
+Objects = MakeSinkFactory(ObjectsSink)
 
 
 class BytesWriter(io.BytesIO):
@@ -120,7 +112,7 @@ class BytesWriter(io.BytesIO):
         return self.getvalue()
 
 
-Bytes = MakeSinkFactory(BytesWriter, 2**16)
+Bytes = MakeSinkFactory(BytesWriter)
 
 
 class FileWriter(object):
@@ -147,14 +139,13 @@ class HTTPPost(object):
     HTTPPost doesn't support the write method, and therefore can not be used
     with tubes.Tee.
     """
-    def __init__(self, url, username=None, password=None, chunk_size=2**32,
+    def __init__(self, url, username=None, password=None,
                  chunks_per_post=2**10, response_handler=lambda _: None):
         self.url = url
         if username:
             self.auth = (username, password)
         else:
             self.auth = None
-        self.chunk_size = chunk_size
         self.chunks_per_post = chunks_per_post
         self.response_handler = response_handler
         self.eof = False
@@ -166,7 +157,7 @@ class HTTPPost(object):
         a generator object to requests.
         """
         for _ in range(self.chunks_per_post):
-            r, self.eof = self.source.read(self.chunk_size)
+            r, self.eof = self.source.read()
             yield r
             if self.eof:
                 return

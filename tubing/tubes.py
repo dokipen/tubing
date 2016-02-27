@@ -11,11 +11,14 @@ import json
 import zlib
 import gzip
 import functools
+import os
 
 logger = logging.getLogger('tubing.tubes')
 
+OBJ_CHUNK_SIZE=int(os.environ.get("OBJ_CHUNK_SIZE", 2**3))
+BYTE_CHUNK_SIZE=int(os.environ.get("BYTE_CHUNK_SIZE", 2**18))
 
-def MakeTransformerTubeFactory(transformer_cls, default_chunk_size=2**16):
+def MakeTransformerTubeFactory(transformer_cls, default_chunk_size=BYTE_CHUNK_SIZE):
     """
     Returns a TransformerTubeFactory, which in turn, returns a TransformerTube.
     """
@@ -55,6 +58,8 @@ class TransformerTubeWorker(object):
         self.apparatus = apparatus
         self.source = self.apparatus.tail()
         self.apparatus.tubes.append(self)
+        if not chunk_size:
+            raise ValueError("no chunk size")
         self.chunk_size = chunk_size
         self.transformer = transformer
         self.eof = False
@@ -67,13 +72,15 @@ class TransformerTubeWorker(object):
     def tube(self, other):
         return other.receive(self.apparatus)
 
-    def read_complete(self, amt):
+    def read_complete(self):
         """
         read_complete tells us if the current request is fulfilled. It's fulfilled
         if we've reached the EOF in the source, or we have $amt parts. If amt is
         None, we should read to the source's EOF.
         """
-        return self.eof or amt and self.buffer and len(self.buffer) >= amt
+        buff_len = len(self.buffer or [])
+        logger.debug("[%s] buffer: %d of %d", self.transformer, buff_len, self.chunk_size)
+        return self.eof or (self.buffer and buff_len >= self.chunk_size)
 
     def shift_buffer(self, amt):
         """
@@ -104,13 +111,14 @@ class TransformerTubeWorker(object):
         """
         return self.buffer and len(self.buffer) or 0
 
-    def read(self, amt=None):
+    def read(self):
         """
         This is where the rubber meets the snow.
         """
+        logger.debug("[%s] Reading %s", self.transformer, self.chunk_size)
         try:
-            while not self.read_complete(amt):
-                inchunk, self.eof = self.source.read(self.chunk_size)
+            while not self.read_complete():
+                inchunk, self.eof = self.source.read()
                 if inchunk:
                     outchunk = self.transformer.transform(inchunk)
                     if outchunk:
@@ -120,22 +128,22 @@ class TransformerTubeWorker(object):
                     if hasattr(self.transformer, 'result'):
                         self.result = self.transformer.result
 
-            if self.eof and (not amt or self.buffer_len() <= amt):
+            if self.eof and (self.buffer_len() <= self.chunk_size):
                 # We've written everything, we're done
-                return self.shift_buffer(amt), True
+                return self.shift_buffer(self.chunk_size), True
 
-            return self.shift_buffer(amt), False
+            return self.shift_buffer(self.chunk_size), False
         except:
             logger.exception("Tube failed")
             hasattr(self.transformer, 'abort') and self.transformer.abort()
             raise
 
-    def read_iterator(self, chunk_size):
-        return TubeIterator(self, chunk_size)
+    def read_iterator(self):
+        return TubeIterator(self)
 
-    def gen(self, chunk_size):
+    def gen(self):
         while True:
-            r, eof = self.read(chunk_size)
+            r, eof = self.read()
             yield r
             if eof:
                 return
@@ -146,9 +154,8 @@ class TubeIterator(object):
     TubeIterator wraps a tube in an iterator object.
     """
 
-    def __init__(self, tube, chunk_size):
+    def __init__(self, tube):
         self.tube = tube
-        self.chunk_size = chunk_size
         self.eof = False
 
     def next(self):
@@ -156,7 +163,7 @@ class TubeIterator(object):
             logger.debug("iter stopped")
             raise StopIteration
 
-        r, self.eof = self.tube.read(self.chunk_size)
+        r, self.eof = self.tube.read()
         logger.debug("iter >> %s", r)
         return r
 
@@ -236,7 +243,7 @@ class SplitTransformer(object):
         return [self.buffer]
 
 
-Split = MakeTransformerTubeFactory(SplitTransformer)
+Split = MakeTransformerTubeFactory(SplitTransformer, OBJ_CHUNK_SIZE)
 
 
 class JoinedTransformer(object):
@@ -255,7 +262,7 @@ class JoinedTransformer(object):
             return self.by + self.by.join(chunk)
 
 
-Joined = MakeTransformerTubeFactory(JoinedTransformer, 2**10)
+Joined = MakeTransformerTubeFactory(JoinedTransformer)
 
 
 class JSONParserTransformer(object):
@@ -273,7 +280,7 @@ class JSONParserTransformer(object):
         return [json.loads(raw.decode(self.encoding)) for raw in raws]
 
 
-JSONParser = MakeTransformerTubeFactory(JSONParserTransformer)
+JSONParser = MakeTransformerTubeFactory(JSONParserTransformer, OBJ_CHUNK_SIZE)
 
 
 class JSONSerializerTransformer(object):
@@ -296,7 +303,7 @@ class JSONSerializerTransformer(object):
         return r
 
 
-JSONSerializer = MakeTransformerTubeFactory(JSONSerializerTransformer)
+JSONSerializer = MakeTransformerTubeFactory(JSONSerializerTransformer, OBJ_CHUNK_SIZE)
 
 
 # Where should this all purpose thing go? Here I guess.
@@ -325,7 +332,7 @@ class ChunkMapTransformer(object):
         return self.fn(chunk)
 
 
-ChunkMap = MakeTransformerTubeFactory(ChunkMapTransformer)
+ChunkMap = MakeTransformerTubeFactory(ChunkMapTransformer, OBJ_CHUNK_SIZE)
 
 
 class MapTransformer(object):
@@ -340,7 +347,7 @@ class MapTransformer(object):
         return map(self.fn, chunk)
 
 
-Map = MakeTransformerTubeFactory(MapTransformer)
+Map = MakeTransformerTubeFactory(MapTransformer, OBJ_CHUNK_SIZE)
 
 
 class TeeTransformer(object):
@@ -375,4 +382,4 @@ class FilterTransformer(object):
         return list(filter(self.fn, chunk))
 
 
-Filter = MakeTransformerTubeFactory(FilterTransformer)
+Filter = MakeTransformerTubeFactory(FilterTransformer, OBJ_CHUNK_SIZE)
