@@ -127,7 +127,7 @@ class TransformerTubeWorker(object):
                     if outchunk:
                         self.append(outchunk)
                 if self.eof and hasattr(self.transformer, 'close'):
-                    self.append(self.transformer.close())
+                    self.transformer.close()
                     if hasattr(self.transformer, 'result'):
                         self.result = self.transformer.result
 
@@ -307,21 +307,6 @@ class JSONDumpsTransformer(object):
 
 
 JSONDumps = MakeTransformerTubeFactory(JSONDumpsTransformer, OBJ_CHUNK_SIZE)
-
-
-# Where should this all purpose thing go? Here I guess.
-class DebugPrinter(object):
-    """
-    DebugPrinter sends everything to the module logger before passing it down
-    the apparatus.
-    """
-
-    def transform(self, chunk):
-        logger.debug(chunk)
-        return chunk
-
-
-Debugger = MakeTransformerTubeFactory(DebugPrinter)
 
 
 class ChunkMapTransformer(object):

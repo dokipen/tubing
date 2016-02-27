@@ -86,7 +86,7 @@ def BulkUpdate(
     index,
     username=None,
     password=None,
-    chunks_per_post=20,
+    chunks_per_post=1,
     fail_on_error=True,
 ):
     """
@@ -100,8 +100,9 @@ def BulkUpdate(
                 resp_obj = json.loads(resp.text)
             except ValueError:
                 raise ElasticSearchError("invalid response: '%s'" % (resp.text))
+            logger.debug(resp_obj)
 
-            if resp_obj['errors']:
+            if resp_obj.get('errors'):
                 raise ElasticSearchError(
                     "errors in response: '%s'" % (resp.text)
                 )

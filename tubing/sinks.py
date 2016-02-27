@@ -158,7 +158,11 @@ class HTTPPost(object):
         """
         for _ in range(self.chunks_per_post):
             r, self.eof = self.source.read()
-            yield r
+            if isinstance(r, list):
+                for l in r:
+                    yield l
+            else:
+                yield r
             if self.eof:
                 return
 
@@ -176,13 +180,13 @@ class HTTPPost(object):
 class DebugPrinter(object):
 
     def write(self, chunk):
-        logger.debug(chunk)
+        logger.error(chunk)
 
     def close(self):
-        logger.debug("CLOSED")
+        logger.error("CLOSED")
 
     def abort(self):
-        logger.debug("ABORTED")
+        logger.error("ABORTED")
 
 
 Debugger = MakeSinkFactory(DebugPrinter)
@@ -200,3 +204,15 @@ class HashPrinter(object):
 
 
 Hash = MakeSinkFactory(HashPrinter)
+
+class CounterPrinter(object):
+    def __init__(self):
+        self.counter = 0
+
+    def write(self, chunk):
+        self.counter += len(chunk)
+
+    def result(self):
+        return self.counter
+
+Counter = MakeSinkFactory(CounterPrinter)
