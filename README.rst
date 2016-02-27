@@ -124,9 +124,6 @@ Tubes
 |`ChunkMap`      |Takes a transformer function for batch of stream     |
 |                |items.                                               |
 +----------------+-----------------------------------------------------+
-|`Debugger`      |Proxies stream, writing each chunk to the            |
-|                |`tubing.tubes` debugger with level DEBUG.            |
-+----------------+-----------------------------------------------------+
 
 Sinks
 ~~~~~
