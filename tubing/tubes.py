@@ -127,7 +127,9 @@ class TransformerTubeWorker(object):
                     if outchunk:
                         self.append(outchunk)
                 if self.eof and hasattr(self.transformer, 'close'):
-                    self.transformer.close()
+                    c = self.transformer.close()
+                    if c:
+                        self.append(c)
                     if hasattr(self.transformer, 'result'):
                         self.result = self.transformer.result
 
