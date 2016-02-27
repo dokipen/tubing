@@ -58,7 +58,7 @@ Now, witness the power of this fully operational I/O library.
         ),
     ]
     sources.Objects(objs) \
-         | tubes.JSONSerializer() \
+         | tubes.JSONDumps() \
          | tubes.Joined(by=b"\n") \
          | tubes.Gzip() \
          | sinks.File("output.gz", "wb")
@@ -103,9 +103,11 @@ Tubes
 +----------------+-----------------------------------------------------+
 |`Gzip`          |Zips a binary stream.                                |
 +----------------+-----------------------------------------------------+
-|`JSONParser`    |Parses a byte string stream of raw JSON objects.     |
+|`JSONLoads`     |Parses a byte string stream of raw JSON objects. Will|
+|                |try to use ujson, then built-in json.                |
 +----------------+-----------------------------------------------------+
-|`JSONSerializer`|Serializes an object stream using `json.dumps`.      |
+|`JSONDumps`     |Serializes an object stream using `json.dumps`. Will |
+|                |try to use ujson, then built-in json.                |
 +----------------+-----------------------------------------------------+
 |`Split`         |Splits a stream that supports the `split` method.    |
 +----------------+-----------------------------------------------------+
@@ -277,7 +279,7 @@ Well.. I'm this far, let's just push through.
 
     sink = sources.Objects(objs) \
          | AllMixedUp(chunk_size=2) \
-         | tubes.JSONSerializer() \
+         | tubes.JSONDumps() \
          | tubes.Joined(by=b"\n") \
          | Debugger()
     # Output:

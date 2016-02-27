@@ -28,12 +28,12 @@ class PipeTestCase(unittest.TestCase):
 
     def testPipe(self):
         source = sources.Objects(SOURCE_DATA)
-        apparatus = source | tubes.JSONSerializer(separators=(',', ':')) \
+        apparatus = source | tubes.JSONDumps() \
                       | tubes.Joined(by=b"\n") \
                       | tubes.Gzip() \
                       | tubes.Gunzip() \
                       | tubes.Split(on=b"\n") \
-                      | tubes.JSONParser() \
+                      | tubes.JSONLoads() \
                       | sinks.Objects()
         result = apparatus.result
 
@@ -48,12 +48,12 @@ class PipeTestCase(unittest.TestCase):
             return line["name"] == "Calvin"
 
         source = sources.Objects(SOURCE_DATA)
-        apparatus = source | tubes.JSONSerializer(separators=(',', ':')) \
+        apparatus = source | tubes.JSONDumps() \
                       | tubes.Joined(by=b"\n") \
                       | tubes.Gzip() \
                       | tubes.Gunzip() \
                       | tubes.Split(on=b"\n") \
-                      | tubes.JSONParser() \
+                      | tubes.JSONLoads() \
                       | tubes.Filter(fn) \
                       | sinks.Objects()
 

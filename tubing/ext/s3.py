@@ -112,4 +112,4 @@ class MultipartWriter(object):  # pragma: no cover
         )
 
 
-MultipartUpload = sinks.MakeSinkFactory(MultipartWriter, default_chunk_size=2**33)
+MultipartUpload = sinks.MakeSinkFactory(MultipartWriter)

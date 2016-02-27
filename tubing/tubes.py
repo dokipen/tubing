@@ -7,7 +7,10 @@ If you don't need state, you can pass a transformer function directly to a
 ChunkMap or Map Tube.
 """
 import logging
-import json
+try:
+    import ujson as json
+except:
+    import json
 import zlib
 import gzip
 import functools
@@ -265,9 +268,9 @@ class JoinedTransformer(object):
 Joined = MakeTransformerTubeFactory(JoinedTransformer)
 
 
-class JSONParserTransformer(object):
+class JSONLoadsTransformer(object):
     """
-    JSONParserTransformer is not very smart. It expects a stream of complete raw
+    JSONLoadsTransformer is not very smart. It expects a stream of complete raw
     JSON byte strings and works well with Delimiter for source files with one
     JSON object per line.
     """
@@ -280,12 +283,12 @@ class JSONParserTransformer(object):
         return [json.loads(raw.decode(self.encoding)) for raw in raws]
 
 
-JSONParser = MakeTransformerTubeFactory(JSONParserTransformer, OBJ_CHUNK_SIZE)
+JSONLoads = MakeTransformerTubeFactory(JSONLoadsTransformer, OBJ_CHUNK_SIZE)
 
 
-class JSONSerializerTransformer(object):
+class JSONDumpsTransformer(object):
     """
-    JSONSerializerTransformer takes an object stream and serializes it to an
+    JSONDumpsTransformer takes an object stream and serializes it to an
     array of json byte strings.
     """
 
@@ -303,7 +306,7 @@ class JSONSerializerTransformer(object):
         return r
 
 
-JSONSerializer = MakeTransformerTubeFactory(JSONSerializerTransformer, OBJ_CHUNK_SIZE)
+JSONDumps = MakeTransformerTubeFactory(JSONDumpsTransformer, OBJ_CHUNK_SIZE)
 
 
 # Where should this all purpose thing go? Here I guess.

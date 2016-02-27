@@ -88,5 +88,8 @@ setup(
             "sphinx",
             "sphinx_rtd_theme",
         ],
+        "ujson": [
+            "ujson",
+        ],
     },
 )

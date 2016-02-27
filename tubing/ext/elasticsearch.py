@@ -77,8 +77,7 @@ class BulkUpdateTransformer(object):
 
 
 PrepareBulkUpdate = tubes.MakeTransformerTubeFactory(
-    BulkUpdateTransformer,
-    default_chunk_size=2**10
+    BulkUpdateTransformer, 2**3
 )
 
 
@@ -87,12 +86,11 @@ def BulkUpdate(
     index,
     username=None,
     password=None,
-    chunk_size=50,
     chunks_per_post=20,
     fail_on_error=True,
 ):
     """
-    Docs per post is chunk_size * chunks_per_post.
+    Docs per post is source.chunk_size * chunks_per_post.
     """
     url = "%s/%s/_bulk" % (base_url, index)
 
@@ -116,7 +114,6 @@ def BulkUpdate(
         url=url,
         username=username,
         password=password,
-        chunk_size=chunk_size,
         chunks_per_post=chunks_per_post,
         response_handler=response_handler,
     )
