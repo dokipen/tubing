@@ -86,7 +86,7 @@ def BulkUpdate(
     index,
     username=None,
     password=None,
-    chunks_per_post=1,
+    chunks_per_post=512,
     fail_on_error=True,
 ):
     """
