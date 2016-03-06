@@ -45,8 +45,7 @@ class SinkRunner(object):
             raise
 
 
-
-class Sink(object):
+class SinkWorker(object):
 
     def __init__(self, writer):
         self.writer = writer
@@ -72,50 +71,55 @@ class Sink(object):
         return apparatus
 
 
-def SinkFactory(writer_cls, *args, **kwargs):
+def Sink(writer_cls, *args, **kwargs):
     writer = writer_cls(*args, **kwargs)
-    return Sink(writer)
+    return SinkWorker(writer)
 
 
 def MakeSinkFactory(sink_cls):
-    return functools.partial(SinkFactory, sink_cls)
+    return functools.partial(Sink, sink_cls)
 
 
-class ObjectsSink(list):
+def SinkFactory():
+
+    def wrapper(cls):
+        return MakeSinkFactory(cls)
+
+    return wrapper
+
+
+@SinkFactory()
+class Objects(list):
     """
-    Writes an object stream to a list.
+    Objects writes an object stream to a list.
     """
 
     def write(self, objs):
         self.extend(objs)
 
 
-Objects = MakeSinkFactory(ObjectsSink)
-
-
-class BytesWriter(io.BytesIO):
+@SinkFactory()
+class Bytes(io.BytesIO):
     """
-    BytesWriter collects a stream of bytes and saves it to the result member
+    Bytes collects a stream of bytes and saves it to the result member
     on close().
     """
 
     def __init__(self, *args, **kwargs):
-        super(BytesWriter, self).__init__(*args, **kwargs)
+        super(Bytes, self).__init__(*args, **kwargs)
 
     def close(self):
-        super(BytesWriter, self).close()
+        super(Bytes, self).close()
 
     def abort(self):
-        super(BytesWriter, self).close()
+        super(Bytes, self).close()
 
     def result(self):
         return self.getvalue()
 
 
-Bytes = MakeSinkFactory(BytesWriter)
-
-
-class FileWriter(object):
+@SinkFactory()
+class File(object):
 
     def __init__(self, *args, **kwargs):
         self.f = open(*args, **kwargs)
@@ -131,7 +135,67 @@ class FileWriter(object):
         self.f.close()
 
 
-File = MakeSinkFactory(FileWriter)
+@SinkFactory()
+class Debug(object):
+
+    def write(self, chunk):
+        logger.error(chunk)
+
+    def close(self):
+        logger.error("CLOSED")
+
+    def abort(self):
+        logger.error("ABORTED")
+
+
+@SinkFactory()
+class Hash(object):
+
+    def __init__(self, algorithm):
+        self.hsh = hashlib.new(algorithm)
+
+    def write(self, chunk):
+        self.hsh.update(chunk)
+
+    def result(self):
+        return self.hsh
+
+
+@SinkFactory()
+class Counter(object):
+
+    def __init__(self):
+        self.counter = 0
+
+    def write(self, chunk):
+        self.counter += len(chunk)
+
+    def result(self):
+        return self.counter
+
+
+@SinkFactory()
+class Reduce(object):
+
+    def __init__(self, fn):
+        self.accum = None
+        self.fn = fn
+
+    def write(self, chunk):
+        if self.accum:
+            self.accum = reduce(self.fn, chunk, self.accum)
+        else:
+            self.accum = reduce(self.fn, chunk)
+
+    def result(self):
+        return self.accum
+
+
+@SinkFactory()
+class Stdout(object):
+
+    def write(self, chunk):
+        print(chunk,)
 
 
 class HTTPPost(object):
@@ -139,8 +203,15 @@ class HTTPPost(object):
     HTTPPost doesn't support the write method, and therefore can not be used
     with tubes.Tee.
     """
-    def __init__(self, url, username=None, password=None,
-                 chunks_per_post=2**10, response_handler=lambda _: None):
+
+    def __init__(
+        self,
+        url,
+        username=None,
+        password=None,
+        chunks_per_post=2**10,
+        response_handler=lambda _: None
+    ):
         self.url = url
         if username:
             self.auth = (username, password)
@@ -175,44 +246,3 @@ class HTTPPost(object):
             self.response_handler(r)
             apparatus.result.append(r)
         return apparatus
-
-
-class DebugPrinter(object):
-
-    def write(self, chunk):
-        logger.error(chunk)
-
-    def close(self):
-        logger.error("CLOSED")
-
-    def abort(self):
-        logger.error("ABORTED")
-
-
-Debugger = MakeSinkFactory(DebugPrinter)
-
-
-class HashPrinter(object):
-    def __init__(self, algorithm):
-        self.hsh = hashlib.new(algorithm)
-
-    def write(self, chunk):
-        self.hsh.update(chunk)
-
-    def result(self):
-        return self.hsh
-
-
-Hash = MakeSinkFactory(HashPrinter)
-
-class CounterPrinter(object):
-    def __init__(self):
-        self.counter = 0
-
-    def write(self, chunk):
-        self.counter += len(chunk)
-
-    def result(self):
-        return self.counter
-
-Counter = MakeSinkFactory(CounterPrinter)

@@ -18,15 +18,30 @@ import os
 
 logger = logging.getLogger('tubing.tubes')
 
-OBJ_CHUNK_SIZE=int(os.environ.get("OBJ_CHUNK_SIZE", 2**3))
-BYTE_CHUNK_SIZE=int(os.environ.get("BYTE_CHUNK_SIZE", 2**18))
+OBJ_CHUNK_SIZE = int(os.environ.get("OBJ_CHUNK_SIZE", 2**3))
+BYTE_CHUNK_SIZE = int(os.environ.get("BYTE_CHUNK_SIZE", 2**18))
 
-def MakeTransformerTubeFactory(transformer_cls, default_chunk_size=BYTE_CHUNK_SIZE):
+
+def TransformerTubeFactory(default_chunk_size=BYTE_CHUNK_SIZE):
+    """
+    TransformerTubeFactory is a decorator to turn a Transformer class into a
+    TransformerTubeFactory.
+    """
+
+    def wrapper(cls):
+        return MakeTransformerTubeFactory(cls, default_chunk_size)
+
+    return wrapper
+
+
+def MakeTransformerTubeFactory(transformer_cls,
+                               default_chunk_size=BYTE_CHUNK_SIZE):
     """
     Returns a TransformerTubeFactory, which in turn, returns a TransformerTube.
     """
-    return functools.partial(TransformerTube, transformer_cls,
-                             default_chunk_size)
+    return functools.partial(
+        TransformerTube, transformer_cls, default_chunk_size
+    )
 
 
 class TransformerTube(object):
@@ -82,7 +97,8 @@ class TransformerTubeWorker(object):
         None, we should read to the source's EOF.
         """
         buff_len = len(self.buffer or [])
-        logger.debug("[%s] buffer: %d of %d", self.transformer, buff_len, self.chunk_size)
+        logger.debug("[%s] buffer: %d of %d", self.transformer, buff_len,
+                     self.chunk_size)
         return self.eof or (self.buffer and buff_len >= self.chunk_size)
 
     def shift_buffer(self, amt):
@@ -182,9 +198,10 @@ class TubeIterator(object):
         return self
 
 
-class GunzipTransformer(object):
+@TransformerTubeFactory()
+class Gunzip(object):
     """
-    GunzipTransformer unzips a gzipped source stream.
+    Gunzip unzips a gzipped source stream.
     """
 
     def __init__(self):
@@ -194,12 +211,10 @@ class GunzipTransformer(object):
         return self.dec.decompress(chunk) or b''
 
 
-Gunzip = MakeTransformerTubeFactory(GunzipTransformer)
-
-
-class GzipTransformer(object):
+@TransformerTubeFactory()
+class Gzip(object):
     """
-    GzipTransformer Gzips the binary input.
+    Gzip Gzips the binary input.
     """
 
     def __init__(self, compression=9):
@@ -220,12 +235,10 @@ class GzipTransformer(object):
         return self.buffer
 
 
-Gzip = MakeTransformerTubeFactory(GzipTransformer)
-
-
-class SplitTransformer(object):
+@TransformerTubeFactory()
+class Split(object):
     """
-    SplitTransformer splits source data on a delimiter.
+    Split splits source data on a delimiter.
     """
 
     def __init__(self, on=b'\n'):
@@ -248,12 +261,10 @@ class SplitTransformer(object):
         return [self.buffer]
 
 
-Split = MakeTransformerTubeFactory(SplitTransformer, OBJ_CHUNK_SIZE)
-
-
-class JoinedTransformer(object):
+@TransformerTubeFactory()
+class Joined(object):
     """
-    JoinedTransformer does single level flattening of streams.
+    Joined does single level flattening of streams.
     """
 
     def __init__(self, by=b""):
@@ -262,17 +273,16 @@ class JoinedTransformer(object):
 
     def transform(self, chunk):
         if self.first:
+            self.first = False
             return self.by.join(chunk)
         else:
             return self.by + self.by.join(chunk)
 
 
-Joined = MakeTransformerTubeFactory(JoinedTransformer)
-
-
-class JSONLoadsTransformer(object):
+@TransformerTubeFactory(OBJ_CHUNK_SIZE)
+class JSONLoads(object):
     """
-    JSONLoadsTransformer is not very smart. It expects a stream of complete raw
+    JSONLoads is not very smart. It expects a stream of complete raw
     JSON byte strings and works well with Delimiter for source files with one
     JSON object per line.
     """
@@ -285,12 +295,10 @@ class JSONLoadsTransformer(object):
         return [json.loads(raw.decode(self.encoding)) for raw in raws]
 
 
-JSONLoads = MakeTransformerTubeFactory(JSONLoadsTransformer, OBJ_CHUNK_SIZE)
-
-
-class JSONDumpsTransformer(object):
+@TransformerTubeFactory(OBJ_CHUNK_SIZE)
+class JSONDumps(object):
     """
-    JSONDumpsTransformer takes an object stream and serializes it to an
+    JSONDumps takes an object stream and serializes it to an
     array of json byte strings.
     """
 
@@ -308,43 +316,56 @@ class JSONDumpsTransformer(object):
         return r
 
 
-JSONDumps = MakeTransformerTubeFactory(JSONDumpsTransformer, OBJ_CHUNK_SIZE)
-
-
-class ChunkMapTransformer(object):
+@TransformerTubeFactory(OBJ_CHUNK_SIZE)
+class ChunkMap(object):
     """
     ChunkMapTransformer turns a chunk mapper function into a TubeFactory.
     """
-    def __init__(self, fn):
+
+    def __init__(self, fn, close_fn=None, abort_fn=None):
         self.fn = fn
+        self.close_fn = close_fn
+        self.abort_fn = abort_fn
 
     def transform(self, chunk):
         return self.fn(chunk)
 
+    def close(self):
+        return self.close_fn and self.close_fn()
 
-ChunkMap = MakeTransformerTubeFactory(ChunkMapTransformer, OBJ_CHUNK_SIZE)
+    def abort(self):
+        return self.abort_fn and self.abort_fn()
 
 
-class MapTransformer(object):
+@TransformerTubeFactory(OBJ_CHUNK_SIZE)
+class Map(object):
     """
     ObjectStreamTransformerTransformer takes a callback and applies it to each
     element of the chunk. It's the easiest way to make a transformer.
     """
-    def __init__(self, fn):
+
+    def __init__(self, fn, close_fn=None, abort_fn=None):
         self.fn = fn
+        self.close_fn = close_fn
+        self.abort_fn = abort_fn
 
     def transform(self, chunk):
         return map(self.fn, chunk)
 
+    def close(self):
+        return self.close_fn and self.close_fn()
 
-Map = MakeTransformerTubeFactory(MapTransformer, OBJ_CHUNK_SIZE)
+    def abort(self):
+        return self.abort_fn and self.abort_fn()
 
 
-class TeeTransformer(object):
+@TransformerTubeFactory()
+class Tee(object):
     """
     TeeTransformer writes the chunk to the specified sink and passes it along
     the apparatus.
     """
+
     def __init__(self, sink):
         self.sink = sink
         self.result = None
@@ -357,19 +378,15 @@ class TeeTransformer(object):
         self.result = self.sink.result()
 
 
-Tee = MakeTransformerTubeFactory(TeeTransformer)
-
-
-class FilterTransformer(object):
+@TransformerTubeFactory(OBJ_CHUNK_SIZE)
+class Filter(object):
     """
     FilterTransformer takes a filter function and wraps a call to the filter
     built-in for each chunk.
     """
+
     def __init__(self, fn):
         self.fn = fn
 
     def transform(self, chunk):
         return list(filter(self.fn, chunk))
-
-
-Filter = MakeTransformerTubeFactory(FilterTransformer, OBJ_CHUNK_SIZE)

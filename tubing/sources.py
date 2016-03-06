@@ -27,7 +27,9 @@ logger = logging.getLogger('tubing.sources')
 
 HANDLERS = []
 
+
 def handle_signals(*signals):
+
     def handle(*args, **kwargs):
         try:
             for handle in HANDLERS:
@@ -41,7 +43,17 @@ def handle_signals(*signals):
     for sig in signals:
         signal.signal(sig, handle)
 
+
 handle_signals(signal.SIGTERM, signal.SIGINT, signal.SIGHUP)
+
+
+def SourceFactory(default_chunk_size=2**16):
+
+    def wrapper(cls):
+        return MakeSourceFactory(cls, default_chunk_size)
+
+    return wrapper
+
 
 class MakeSourceFactory(object):
     """
@@ -74,24 +86,29 @@ class Source(object):
     def __init__(self, reader, chunk_size):
         self.reader = reader
         self.chunk_size = chunk_size
+        self.app = None
 
     def read(self):
         logger.debug("[%s] Reading %s", self.reader, self.chunk_size)
         return self.reader.read(self.chunk_size)
 
     def __or__(self, other):
-        return self.pipe(other)
+        return self.tube(other)
 
-    def pipe(self, other):
-        return other.receive(apparatus.Apparatus(self))
+    def tube(self, other):
+        if not self.app:
+            # apparatus sets app on Source
+            apparatus.Apparatus(self)
+        return other.receive(self.app)
 
     def __str__(self):
         return "<tubing.readers.Source(%s)>" % (self.reader)
 
 
-class ObjectReader(object):
+@SourceFactory(2**3)
+class Objects(object):
     """
-    ObjectReader outputs a list of objects.
+    Objects outputs a list of objects.
     """
 
     def __init__(self, objs):
@@ -102,12 +119,10 @@ class ObjectReader(object):
         return r, len(self.objs) == 0
 
 
-Objects = MakeSourceFactory(ObjectReader)
-
-
-class FileReader(object):
+@SourceFactory()
+class File(object):
     """
-    FileReader outputs bytes.
+    File outputs bytes.
     """
 
     def __init__(self, filename, mode="rb"):
@@ -128,13 +143,12 @@ class FileReader(object):
         return unicode(self).encode('utf-8')
 
 
-File = MakeSourceFactory(FileReader)
-
-
-class SocketReader(object):
+@SourceFactory()
+class Socket(object):
     """
-    UDPReader binds and reads from a UDP socket.
+    Socket binds and reads from a socket.
     """
+
     def __init__(self, ip, port, *args):
         self.sock = socket.socket(*args)
         self.sock.bind((ip, port))
@@ -158,10 +172,9 @@ class SocketReader(object):
         self.eof = True
 
 
-Socket = MakeSourceFactory(SocketReader)
+@SourceFactory()
+class Bytes(object):
 
-
-class BytesReader(object):
     def __init__(self, byts):
         self.io = io.BytesIO(byts)
 
@@ -172,10 +185,10 @@ class BytesReader(object):
         else:
             return b'', True
 
-Bytes = MakeSourceFactory(BytesReader)
 
+@SourceFactory()
+class IO(object):
 
-class IOReader(object):
     def __init__(self, stream):
         self.io = stream
 
@@ -186,10 +199,10 @@ class IOReader(object):
         else:
             return b'', True
 
-IO = MakeSourceFactory(IOReader)
 
+@SourceFactory()
+class HTTP(object):
 
-class HTTPReader(object):
     def __init__(self, method, url, *args, **kwargs):
         s = Session()
         s.stream = True
@@ -202,5 +215,3 @@ class HTTPReader(object):
             return r, False
         else:
             return b'', True
-
-HTTP = MakeSourceFactory(HTTPReader)

@@ -44,6 +44,7 @@ class PipeTestCase(unittest.TestCase):
         self.assertEqual(result[3], SOURCE_DATA[3])
 
     def testFilter(self):
+
         def fn(line):
             return line["name"] == "Calvin"
 

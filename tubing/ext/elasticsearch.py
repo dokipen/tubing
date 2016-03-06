@@ -3,8 +3,9 @@ from __future__ import print_function
 Elasticsearch Extension.
 """
 import json
+import requests
 import logging
-from tubing import sinks, tubes
+from tubing import sources, sinks, tubes
 
 logger = logging.getLogger('tubing.ext.elasticsearch')
 
@@ -17,9 +18,9 @@ class DocUpdate(object):  # pragma: no cover
 
     def __init__(
         self,
-        esid,
         doc,
         doc_type,
+        esid=None,
         parent_esid=None,
         doc_as_upsert=True
     ):
@@ -35,7 +36,11 @@ class DocUpdate(object):  # pragma: no cover
         self.doc_type = doc_type
 
     def action(self, encoding):
-        action = dict(update=dict(_id=self.esid, _type=self.doc_type,),)
+        if self.esid:
+            action = dict(update=dict(_id=self.esid, _type=self.doc_type,),)
+        else:
+            action = dict(update=dict(_type=self.doc_type,),)
+
         if self.parent_esid:
             action['update']['parent'] = self.parent_esid
         return json.dumps(action).encode(encoding)
@@ -60,7 +65,8 @@ class ElasticSearchError(Exception):
     pass
 
 
-class BulkUpdateTransformer(object):
+@tubes.TransformerTubeFactory(2**3)
+class PrepareBulkUpdate(object):
     """
     BulkSinkWriter writes bulk updates to Elastic Search. If username or
     password is None, then auth will be skipped.
@@ -74,11 +80,6 @@ class BulkUpdateTransformer(object):
         for update in chunk:
             data.append(update.serialize(self.encoding))
         return data
-
-
-PrepareBulkUpdate = tubes.MakeTransformerTubeFactory(
-    BulkUpdateTransformer, 2**3
-)
 
 
 def BulkUpdate(
@@ -118,3 +119,83 @@ def BulkUpdate(
         chunks_per_post=chunks_per_post,
         response_handler=response_handler,
     )
+
+
+@sources.SourceFactory()
+class ScrollingSearch(object):
+
+    def __init__(self, chunk_size, *args, **kwargs):
+        self.chunk_size = chunk_size
+        self.es = Scroller(*args, **kwargs)
+        self.buffer = []
+        self.finished = False
+
+    def can_fill_read(self):
+        return self.chunk_size <= len(self.buffer)
+
+    def shift(self):
+        s = self.chunk_size
+        r, self.buffer = self.buffer[:s], self.buffer[s:]
+        return r
+
+    def scroll(self):
+        hits = self.es.get_hits()
+        if hits:
+            self.buffer.extend(hits)
+        else:
+            self.finished = True
+
+    def is_eof(self):
+        return len(self.buffer) == 0 and self.finished
+
+    def read(self):
+        if self.is_eof():
+            return [], True
+
+        while not self.can_fill_read() and not self.finished:
+            self.scroll()
+
+        return self.shift(), self.is_eof()
+
+
+class Scroller(object):
+
+    def __init__(
+        self,
+        base_url,
+        index,
+        typ,
+        query,
+        timeout='10m',
+        scroll_id=None,
+        username=None,
+        password=None,
+    ):
+        self.base_url = base_url
+        self.init_endpoint = "{}/{}/_search".format(index, typ)
+        self.scroll_endpoint = "/_search/scroll"
+        self.timeout = timeout
+        self.scroll_id = scroll_id
+        self.query = query
+        if username:
+            self.auth = (username, password)
+        else:
+            self.auth = None
+
+    def get_hits(self):
+        if not self.scroll_id:
+            endpoint = "{}{}?scroll={}&size=1000".format(
+                self.base_url, self.init_endpoint, self.timeout
+            )
+            resp = requests.get(endpoint, json=self.query, auth=self.auth)
+        else:
+            endpoint = "{}{}".format(self.base_url, self.scroll_endpoint)
+            body = dict(scroll=self.timeout, scroll_id=self.scroll_id)
+            resp = requests.get(endpoint, json=body, auth=self.auth)
+
+        self.scroll_id = resp.json().get('_scroll_id')
+        if not self.scroll_id:
+            raise ValueError("No scroll_id found in {}".format(
+                json.dumps(resp.json(),
+                           indent=2)))
+        return resp.json().get('hits', {}).get('hits')

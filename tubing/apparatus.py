@@ -2,8 +2,10 @@ class Apparatus(object):
     """
     Apparatus represents a tubing setup, from source to sink.
     """
+
     def __init__(self, source):
         self.source = source
+        self.source.app = self
         self.tubes = []
         self.sink = None
 
@@ -19,3 +21,10 @@ class Apparatus(object):
 
         else:
             return self.source
+
+    def connect(self, part):
+        """
+        connect connects a new tube or sink to the apparatus.
+        """
+        self.tail().tube(part)
+        return self
