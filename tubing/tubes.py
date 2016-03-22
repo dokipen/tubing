@@ -319,7 +319,7 @@ class JSONDumps(object):
 @TransformerTubeFactory(OBJ_CHUNK_SIZE)
 class ChunkMap(object):
     """
-    ChunkMapTransformer turns a chunk mapper function into a TubeFactory.
+    ChunkMap turns a chunk mapper function into a TubeFactory.
     """
 
     def __init__(self, fn, close_fn=None, abort_fn=None):
@@ -340,7 +340,7 @@ class ChunkMap(object):
 @TransformerTubeFactory(OBJ_CHUNK_SIZE)
 class Map(object):
     """
-    ObjectStreamTransformerTransformer takes a callback and applies it to each
+    Map takes a callback and applies it to each
     element of the chunk. It's the easiest way to make a transformer.
     """
 
@@ -362,7 +362,7 @@ class Map(object):
 @TransformerTubeFactory()
 class Tee(object):
     """
-    TeeTransformer writes the chunk to the specified sink and passes it along
+    Tee writes the chunk to the specified sink and passes it along
     the apparatus.
     """
 
@@ -381,7 +381,7 @@ class Tee(object):
 @TransformerTubeFactory(OBJ_CHUNK_SIZE)
 class Filter(object):
     """
-    FilterTransformer takes a filter function and wraps a call to the filter
+    Filter takes a filter function and wraps a call to the filter
     built-in for each chunk.
     """
 
@@ -390,3 +390,17 @@ class Filter(object):
 
     def transform(self, chunk):
         return list(filter(self.fn, chunk))
+
+
+@TransformerTubeFactory(OBJ_CHUNK_SIZE)
+class Noop(object):
+    """
+    Noop is useful for buffering. Set chunksize for upstream
+    sinks.
+    """
+
+    def __init__(self, fn):
+        self.fn = fn
+
+    def transform(self, chunk):
+        return chunk
