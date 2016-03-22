@@ -398,9 +398,5 @@ class Noop(object):
     Noop is useful for buffering. Set chunksize for upstream
     sinks.
     """
-
-    def __init__(self, fn):
-        self.fn = fn
-
     def transform(self, chunk):
         return chunk
