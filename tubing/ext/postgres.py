@@ -30,11 +30,9 @@ class Query(object):  # pragma: no cover
 
     def read(self, amt):
         rows = self.cursor.fetchmany(amt)
-        print(rows)
         if self.as_dict:
             header = self.header
             def m(row):
-                print(header, row)
                 return dict(zip(self.header, row))
             rows = map(m, rows)
         if not rows:
